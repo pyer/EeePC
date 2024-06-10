@@ -1,0 +1,25 @@
+#!/bin/sh
+set -e
+
+NAME="anacron"
+DAEMON=/usr/sbin/anacron
+
+# Exit service if DAEMON is not installed
+if [ ! -x $DAEMON ]; then
+	exit 161
+fi
+
+# Load defaults
+[ -r /etc/default/anacron ] && . /etc/default/anacron
+
+# Disable if on battery
+if [ "$ANACRON_RUN_ON_BATTERY_POWER" != "yes" ] && [ -x /usr/bin/on_ac_power ]; then
+    /usr/bin/on_ac_power >/dev/null || exit 161
+fi
+
+# don't restart anacron when it's done
+sv once anacron
+
+exec 2>&1
+
+exec $DAEMON -d ${ANACRON_ARGS}

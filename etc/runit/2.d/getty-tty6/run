@@ -1,0 +1,11 @@
+#!/bin/sh -euC
+
+# Disable service, if /dev/tty{N} does not exist. See #914788.
+if ! test -c /dev/tty6 ; then
+	rm /etc/runit/svdir/getty-tty6
+	exit 0
+fi
+
+pgrep -x getty -t tty6 && exit 163
+pgrep -x agetty -t tty6 && exit 163
+exec chpst -P getty 38400 tty6 linux

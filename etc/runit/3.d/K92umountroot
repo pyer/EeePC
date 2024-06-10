@@ -1,0 +1,9 @@
+#! /bin/sh
+
+PATH=/sbin:/bin
+echo "Unmount root ..."
+mount -n -o remount,ro root /
+if mountpoint -q /usr
+then
+	mount -n -o remount,ro /usr /usr
+fi

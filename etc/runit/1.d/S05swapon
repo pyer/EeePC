@@ -1,0 +1,11 @@
+#! /bin/sh
+PATH=/sbin:/bin
+. /lib/init/vars.sh
+
+if [ "$NOSWAP" = yes ]
+then
+	echo "Not activating swap as requested via bootoption noswap."
+else
+	echo "Activating swap"
+	swapon -a -v >/dev/null 2>&1
+fi

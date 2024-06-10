@@ -1,0 +1,27 @@
+#!/bin/sh
+set -e
+
+NAME="ufw"
+DAEMON=/usr/sbin/ufw
+
+# Exit service if DAEMON is not installed
+if [ ! -x $DAEMON ]; then
+	exit 161
+fi
+
+# Exit if missing libraries
+[ -d /usr/lib/ufw ] || exit 161
+
+# Load configuration
+. /etc/ufw/ufw.conf
+
+# Only start if enabled
+if [ "$ENABLED" = "yes" ] || [ "$ENABLED" = "YES" ]; then
+	/usr/lib/ufw/ufw-init start quiet
+else
+	exit 161
+fi
+
+exec 2>&1
+
+exec chpst -b $DAEMON pause
