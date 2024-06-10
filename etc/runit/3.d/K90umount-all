@@ -6,13 +6,12 @@ umask 022
 echo "Sync ..."
 sync
 
-echo "Remount root fs ..."
-
-mount -n -o remount,ro root /
-if mountpoint -q /usr
-then
-	mount -n -o remount,ro /usr /usr
-fi
+#echo "Remount root fs ..."
+#mount -n -o remount,ro root /
+#if mountpoint -q /usr
+#then
+#	mount -n -o remount,ro /usr /usr
+#fi
 
 echo "Unmount tmp fs ..."
 umount -a -r -t tmpfs
