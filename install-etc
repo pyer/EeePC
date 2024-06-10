@@ -1,0 +1,16 @@
+#!/bin/sh
+
+cp -r etc/runit /etc/
+chown -R root:root /etc/runit
+cd /etc/runit/
+mkdir -p svdir
+cd svdir
+ln -s ../2.d/getty-tty1 tty1
+ln -s ../2.d/getty-tty2 tty2
+ln -s ../2.d/getty-tty3 tty3
+ln -s ../2.d/getty-tty4 tty4
+ln -s ../2.d/udevd udevd
+ln -s ../2.d/cron cron
+ln -s ../2.d/nginx nginx
+ln -s ../2.d/sshd sshd
+
