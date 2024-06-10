@@ -1,0 +1,26 @@
+#! /bin/sh
+
+PATH=/sbin:/bin
+umask 022
+
+echo "Sync ..."
+sync
+
+echo "Remount root fs ..."
+
+mount -n -o remount,ro root /
+if mountpoint -q /usr
+then
+	mount -n -o remount,ro /usr /usr
+fi
+
+echo "Unmount tmp fs ..."
+umount -a -r -t tmpfs
+
+# Deactivate swap
+echo "Deactivating swap"
+swapoff -a -v
+
+echo "Unmount all fs ..."
+umount -r -v /dev/sdb1
+
