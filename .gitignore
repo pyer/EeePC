@@ -1,4 +1,9 @@
 # Prerequisites
+init
+runsvdir
+runsv
+chpst
+utmpset
 
 # Object files
 *.o
