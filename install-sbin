@@ -1,0 +1,13 @@
+#!/bin/sh
+sudo rm -f /sbin/init
+sudo install -m 755 init /sbin
+sudo install -m 755 runsvdir /sbin
+sudo install -m 755 runsv    /sbin
+sudo install -m 755 utmpset  /sbin
+sudo install -m 755 chpst    /sbin
+
+sudo rm /sbin/halt /sbin/poweroff /sbin/reboot
+sudo ln -s /sbin/init /sbin/halt
+sudo ln -s /sbin/init /sbin/poweroff
+sudo ln -s /sbin/init /sbin/reboot
+
