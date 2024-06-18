@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+NAME="udevd"
+DAEMON=/sbin/udevd
+
+# Exit service if DAEMON is not installed
+if [ ! -x $DAEMON ]; then
+	exit 161
+fi
+
+exec 2>&1
+
+# kill the old daemon first
+/sbin/udevadm control --exit 2>/dev/null
+
+exec $DAEMON

@@ -1,0 +1,34 @@
+#! /bin/sh
+
+PATH=/sbin:/bin
+
+echo "Sync ..."
+sync
+
+# Deactivate swap
+swapoff -a -v
+
+while read -r DEV MTPT FSTYPE REST
+do
+    case "$MTPT" in
+    /|/usr|/proc|/dev|/.dev|/dev/pts|/dev/shm|/dev/.static/dev|/proc/*|/sys|/sys/*|/run|/run/lock|/run/shm|/run/rpc_pipefs|/dev/vcs)
+        continue
+        ;;
+    /usr)
+        # Remount /usr read-only if /usr is a mount point.
+        mount -n -o remount,ro /usr /usr
+        ;;
+    esac
+    case "$FSTYPE" in
+    proc|procfs|linprocfs|sysfs|securityfs|usbfs|usbdevfs|devpts)
+        continue
+        ;;
+    tmpfs)
+        umount -r -v $MTPT
+        ;;
+    *)
+        umount -r -v $MTPT
+        ;;
+    esac
+done < /proc/mounts
+

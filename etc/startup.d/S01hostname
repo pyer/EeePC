@@ -1,0 +1,5 @@
+#! /bin/sh
+PATH=/sbin:/bin
+HOSTNAME="$(cat /etc/hostname)"
+echo "Setting hostname to '$HOSTNAME'"
+hostname "$HOSTNAME"
