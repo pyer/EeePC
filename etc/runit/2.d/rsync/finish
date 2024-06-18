@@ -1,4 +1,0 @@
-#!/bin/sh
-set -e
-
-. /lib/runit/finish-default "$@"

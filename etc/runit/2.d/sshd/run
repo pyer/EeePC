@@ -1,3 +1,0 @@
-#!/bin/sh
-mkdir -p /run/sshd
-exec /usr/sbin/sshd -D -E /var/log/sshd.log

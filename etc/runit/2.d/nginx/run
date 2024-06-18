@@ -1,2 +1,0 @@
-#!/bin/sh
-exec nginx -e /var/log/nginx/error_init.log -g "daemon off;"
