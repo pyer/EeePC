@@ -37,6 +37,9 @@ int sigi =0;
 /*
  * signal handlers
  */
+void (*sig_defaulthandler)() = SIG_DFL;
+void (*sig_ignorehandler)() = SIG_IGN;
+
 void sig_cont_handler(void) {
   sigc++;
   write(selfpipe[1], "", 1);
@@ -88,22 +91,22 @@ int main(int argc, char *argv[], char * const *envp) {
     if (fd < 0 )
         strerr_die4x(0, FATAL, "unable to create " , flagname, "\n");
     close(fd);
-    kill(1, sig_cont);
+    kill(1, SIGCONT);
     _exit(0);
   }
 
   setsid();
 
-  sig_block(sig_alarm);
-  sig_block(sig_child);
-  sig_catch(sig_child, sig_child_handler);
-  sig_block(sig_cont);
-  sig_catch(sig_cont, sig_cont_handler);
-  sig_block(sig_hangup);
-  sig_block(sig_int);
-  sig_catch(sig_int, sig_int_handler);
-  sig_block(sig_pipe);
-  sig_block(sig_term);
+  sig_block(SIGALRM);
+  sig_block(SIGCHLD);
+  sig_catch(SIGCHLD, sig_child_handler);
+  sig_block(SIGCONT);
+  sig_catch(SIGCONT, sig_cont_handler);
+  sig_block(SIGHUP);
+  sig_block(SIGINT);
+  sig_catch(SIGINT, sig_int_handler);
+  sig_block(SIGPIPE);
+  sig_block(SIGTERM);
 
   /* console */
   if ((ttyfd =open_write("/dev/console")) != -1) {
@@ -155,16 +158,16 @@ int main(int argc, char *argv[], char * const *envp) {
       else
         setsid();
 
-      sig_unblock(sig_alarm);
-      sig_unblock(sig_child);
-      sig_uncatch(sig_child);
-      sig_unblock(sig_cont);
-      sig_ignore(sig_cont);
-      sig_unblock(sig_hangup);
-      sig_unblock(sig_int);
-      sig_uncatch(sig_int);
-      sig_unblock(sig_pipe);
-      sig_unblock(sig_term);
+      sig_unblock(SIGALRM);
+      sig_unblock(SIGCHLD);
+      sig_uncatch(SIGCHLD);
+      sig_unblock(SIGCONT);
+      sig_ignore(SIGCONT);
+      sig_unblock(SIGHUP);
+      sig_unblock(SIGINT);
+      sig_uncatch(SIGINT);
+      sig_unblock(SIGPIPE);
+      sig_unblock(SIGTERM);
             
       strerr_warn3(INFO, "enter stage: ", stage[st], 0);
       execve(*prog, (char *const *)prog, envp);
@@ -176,14 +179,14 @@ int main(int argc, char *argv[], char * const *envp) {
     for (;;) {
       int child;
 
-      sig_unblock(sig_child);
-      sig_unblock(sig_cont);
-      sig_unblock(sig_int);
+      sig_unblock(SIGCHLD);
+      sig_unblock(SIGCONT);
+      sig_unblock(SIGINT);
       // poll with 14 s timeout
       poll(&x, 1, 14000);
-      sig_block(sig_cont);
-      sig_block(sig_child);
-      sig_block(sig_int);
+      sig_block(SIGCONT);
+      sig_block(SIGCHLD);
+      sig_block(SIGINT);
       
       while (read(selfpipe[0], &ch, 1) == 1) {}
       while ((child =wait_nohang(&wstat)) > 0)
@@ -260,7 +263,7 @@ int main(int argc, char *argv[], char * const *envp) {
 #ifdef DEBUG
         strerr_warn2(WARNING, "sending sigterm...", 0);
 #endif
-        kill(pid, sig_term);
+        kill(pid, SIGTERM);
         int i = 0;
         while (i < 5) {
           if ((child =wait_nohang(&wstat)) == pid) {
