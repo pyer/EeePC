@@ -2,10 +2,10 @@
 
 # Disable service, if /dev/tty{N} does not exist. See #914788.
 if ! test -c /dev/tty5 ; then
-	rm /etc/svdir/getty-tty5
+	rm -rf /etc/svdir/tty5
 	exit 0
 fi
 
-pgrep -x getty -t tty5 && exit 163
+pgrep -x getty  -t tty5 && exit 163
 pgrep -x agetty -t tty5 && exit 163
-exec chpst -P getty 38400 tty5 linux
+exec runsid getty 38400 tty5 linux
