@@ -1,8 +1,8 @@
 # Prerequisites
 init
+runsid
 runsvdir
 runsv
-chpst
 utmpset
 
 # Object files

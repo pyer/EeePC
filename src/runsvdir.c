@@ -1,28 +1,26 @@
-#include <sys/types.h>
-#include <sys/stat.h>
+/* runsvdir.c */
+#include <dirent.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
-#include "direntry.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include "strerr.h"
 #include "error.h"
 #include "wait.h"
 #include "env.h"
 #include "open.h"
-#include "pathexec.h"
 #include "fd.h"
 #include "str.h"
-#include "coe.h"
 #include "iopause.h"
 #include "sig.h"
 #include "ndelay.h"
 
-#define USAGE " [-P] dir"
-#define VERSION "$Id: ecebd0a50510e91639c6a45dda8b0947aa8eb885 $"
-
 #define MAXSERVICES 1000
 
-char *progname;
-char *svdir;
+char *svdir = "/etc/svdir";
+
 unsigned long dev =0;
 unsigned long ino =0;
 struct {
@@ -33,15 +31,9 @@ struct {
 } sv[MAXSERVICES];
 int svnum =0;
 int check =1;
-char *rplog =0;
-int rploglen;
-int logpipe[2];
 iopause_fd io[1];
-struct taia stamplog;
 int exitsoon =0;
-int pgrp =0;
 
-void usage () { strerr_die4x(1, "usage: ", progname, USAGE, "\n"); }
 void fatal(char *m1, char *m2) {
   strerr_die6sys(100, "runsvdir ", svdir, ": fatal: ", m1, m2, ": ");
 }
@@ -65,13 +57,13 @@ void runsv(int no, char *name) {
     /* child */
     const char *prog[3];
 
-    prog[0] ="runsv";
+    prog[0] ="/sbin/runsv";
     prog[1] =name;
     prog[2] =0;
     sig_uncatch(SIGHUP);
     sig_uncatch(SIGTERM);
-    if (pgrp) setsid();
-    pathexec_run(*prog, prog, (const char* const*)environ);
+    setsid();
+    execve(*prog, (char * const*)prog, (char* const*)environ);
     fatal("unable to start runsv ", name);
   }
   sv[no].pid =pid;
@@ -79,7 +71,7 @@ void runsv(int no, char *name) {
 
 void runsvdir() {
   DIR *dir;
-  direntry *d;
+  struct dirent *d;
   int i;
   struct stat s;
 
@@ -136,29 +128,6 @@ void runsvdir() {
   }
 }
 
-int setup_log() {
-  if ((rploglen =str_len(rplog)) < 7) {
-    warn3x("log must have at least seven characters.", 0, 0);
-    return(0);
-  }
-  if (pipe(logpipe) == -1) {
-    warn3x("unable to create pipe for log.", 0, 0);
-    return(-1);
-  }
-  coe(logpipe[1]);
-  coe(logpipe[0]);
-  ndelay_on(logpipe[0]);
-  ndelay_on(logpipe[1]);
-  if (fd_copy(2, logpipe[1]) == -1) {
-    warn3x("unable to set filedescriptor for log.", 0, 0);
-    return(-1);
-  }
-  io[0].fd =logpipe[0];
-  io[0].events =IOPAUSE_READ;
-  taia_now(&stamplog);
-  return(1);
-}
-
 int main(int argc, char **argv) {
   struct stat s;
   time_t mtime =0;
@@ -168,32 +137,17 @@ int main(int argc, char **argv) {
   struct taia deadline;
   struct taia now;
   struct taia stampcheck;
-  char ch;
   int i;
 
-  progname =*argv++;
-  if (! argv || ! *argv) usage();
-  if (**argv == '-') {
-    switch (*(*argv +1)) {
-    case 'P': pgrp =1;
-    case '-': ++argv;
-    }
-    if (! argv || ! *argv) usage();
+  if (chdir(svdir) != 0) {
+    fatal("unable to change directory to ", svdir);
   }
 
   sig_catch(SIGTERM, s_term);
   sig_catch(SIGHUP, s_hangup);
-  svdir =*argv++;
-  if (argv && *argv) {
-    rplog =*argv;
-    if (setup_log() != 1) {
-      rplog =0;
-      warn3x("log service disabled.", 0, 0);
-    }
-  }
   if ((curdir =open_read(".")) == -1) 
     fatal("unable to open current directory", 0);
-  coe(curdir);
+  fcntl(curdir,F_SETFD,1);
 
   taia_now(&stampcheck);
 
@@ -217,7 +171,6 @@ int main(int argc, char **argv) {
       warn3x("time warp: resetting time stamp.", 0, 0);
       taia_now(&stampcheck);
       taia_now(&now);
-      if (rplog) taia_now(&stamplog);
     }
     if (taia_less(&now, &stampcheck) == 0) {
       /* wait at least a second */
@@ -225,10 +178,7 @@ int main(int argc, char **argv) {
       taia_add(&stampcheck, &now, &deadline);
       
       if (stat(svdir, &s) != -1) {
-        if (check || \
-            s.st_mtime != mtime || s.st_ino != ino || s.st_dev != dev) {
-          /* svdir modified */
-          if (chdir(svdir) != -1) {
+        if (check || s.st_mtime != mtime || s.st_ino != ino || s.st_dev != dev) {
             mtime =s.st_mtime;
             dev =s.st_dev;
             ino =s.st_ino;
@@ -236,42 +186,18 @@ int main(int argc, char **argv) {
             if (now.sec.x <= (4611686018427387914ULL +(uint64)mtime))
               sleep(1);
             runsvdir();
-            while (fchdir(curdir) == -1) {
-              warn("unable to change directory, pausing", 0);
-              sleep(5);
-            }
-          }
-          else
-            warn("unable to change directory to ", svdir);
         }
-      }
-      else
+      } else {
         warn("unable to stat ", svdir);
+      }
     }
 
-    if (rplog)
-      if (taia_less(&now, &stamplog) == 0) {
-        write(logpipe[1], ".", 1);
-        taia_uint(&deadline, 900);
-        taia_add(&stamplog, &now, &deadline);
-      }
     taia_uint(&deadline, check ? 1 : 5);
     taia_add(&deadline, &now, &deadline);
 
     sig_block(SIGCHLD);
-    if (rplog)
-      iopause(io, 1, &deadline, &now);
-    else
-      iopause(0, 0, &deadline, &now);
+    iopause(0, 0, &deadline, &now);
     sig_unblock(SIGCHLD);
-
-    if (rplog && (io[0].revents | IOPAUSE_READ))
-      while (read(logpipe[0], &ch, 1) > 0)
-        if (ch) {
-          for (i =6; i < rploglen; i++)
-            rplog[i -1] =rplog[i];
-          rplog[rploglen -1] =ch;
-        }
 
     switch(exitsoon) {
     case 1:

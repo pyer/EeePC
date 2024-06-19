@@ -5,7 +5,7 @@ OPTIONS=-O2 -Wall -c
 
 ####################
 
-default: chpst init runsv runsvdir utmpset
+default: init runsid runsv runsvdir utmpset
 
 ####################
 
@@ -25,7 +25,7 @@ utmpset: utmpset.o unix.a byte.a
 	gcc -s -o $@ $^
 	cp $@ ../
 
-chpst: chpst.o uidgid.o unix.a byte.a
+runsid: runsid.o unix.a byte.a
 	gcc -s -o $@ $^
 	cp $@ ../
 
@@ -37,6 +37,9 @@ chpst: chpst.o uidgid.o unix.a byte.a
 init.o: init.c
 	gcc $(OPTIONS) -o $@ $<
 
+runsid.o: runsid.c
+	gcc $(OPTIONS) -o $@ $<
+
 runsv.o: runsv.c
 	gcc $(OPTIONS) -o $@ $<
 
@@ -46,12 +49,6 @@ runsvdir.o: runsvdir.c
 utmpset.o: utmpset.c
 	gcc $(OPTIONS) -o $@ $<
 
-chpst.o: chpst.c
-	gcc $(OPTIONS) -o $@ $<
-
-
-uidgid.o: uidgid.c uidgid.h
-	gcc $(OPTIONS) -o $@ $<
 
 pmatch.o: pmatch.c
 	gcc $(OPTIONS) -o $@ $<
