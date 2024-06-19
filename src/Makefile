@@ -165,14 +165,6 @@ openreadclose.o: error.h gen_alloc.h open.h openreadclose.c \
 openreadclose.h readclose.h stralloc.h
 	gcc $(OPTIONS) -o $@ openreadclose.c
 
-pathexec_env.o: alloc.h byte.h env.h gen_alloc.h pathexec.h \
-pathexec_env.c str.h stralloc.h
-	gcc $(OPTIONS) -o $@ pathexec_env.c
-
-pathexec_run.o: env.h error.h gen_alloc.h pathexec.h \
-pathexec_run.c str.h stralloc.h
-	gcc $(OPTIONS) -o $@ pathexec_run.c
-
 readclose.o: error.h gen_alloc.h readclose.c readclose.h \
 stralloc.h
 	gcc $(OPTIONS) -o $@ readclose.c
@@ -309,8 +301,7 @@ unix.a: alloc.o alloc_re.o buffer.o buffer_0.o buffer_1.o buffer_2.o \
 buffer_get.o buffer_put.o buffer_read.o buffer_write.o coe.o env.o \
 error.o error_str.o fd_copy.o fd_move.o fifo.o lock_ex.o lock_exnb.o \
 ndelay_off.o ndelay_on.o open_append.o open_read.o \
-open_trunc.o open_write.o openreadclose.o pathexec_env.o \
-pathexec_run.o readclose.o seek_set.o sgetopt.o \
+open_trunc.o open_write.o openreadclose.o readclose.o seek_set.o sgetopt.o \
 sig_block.o sig_catch.o sig_pause.o stralloc_cat.o stralloc_catb.o \
 stralloc_cats.o stralloc_eady.o stralloc_opyb.o stralloc_opys.o \
 stralloc_pend.o strerr_die.o strerr_sys.o subgetopt.o wait_nohang.o \
@@ -320,8 +311,7 @@ wait_pid.o
 	buffer_get.o buffer_put.o buffer_read.o buffer_write.o coe.o env.o \
 	error.o error_str.o fd_copy.o fd_move.o fifo.o lock_ex.o lock_exnb.o \
 	ndelay_off.o ndelay_on.o open_append.o open_read.o \
-	open_trunc.o open_write.o openreadclose.o pathexec_env.o \
-	pathexec_run.o readclose.o seek_set.o sgetopt.o \
+	open_trunc.o open_write.o openreadclose.o readclose.o seek_set.o sgetopt.o \
 	sig_block.o sig_catch.o sig_pause.o stralloc_cat.o stralloc_catb.o \
 	stralloc_cats.o stralloc_eady.o stralloc_opyb.o stralloc_opys.o \
 	stralloc_pend.o strerr_die.o strerr_sys.o subgetopt.o wait_nohang.o \

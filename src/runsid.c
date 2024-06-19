@@ -28,11 +28,6 @@ int main(int argc, char * const *argv) {
   argv++;
   progname = *argv;
 
-/*
-  pathexec_run(progname,argv,environ);
-void pathexec_run(const char *file,const char * const *argv,const char * const *envp)
-*/
-
   if (progname[str_chr(progname,'/')]) {
     execve(progname,argv,environ);
     return(0);
