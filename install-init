@@ -1,0 +1,17 @@
+#!/bin/sh
+
+sudo cp -r init/etc/* /etc/
+
+sudo rm -f /sbin/init
+sudo install -m 755 init/src/init     /sbin
+sudo install -m 755 init/src/runsid   /sbin
+sudo install -m 755 init/src/runsvdir /sbin
+sudo install -m 755 init/src/runsv    /sbin
+sudo install -m 755 init/src/utmpset  /sbin
+
+sudo rm -f /sbin/halt /sbin/poweroff /sbin/reboot
+sudo ln -s /sbin/init /sbin/halt
+sudo ln -s /sbin/init /sbin/poweroff
+sudo ln -s /sbin/init /sbin/reboot
+
+#!/bin/sh

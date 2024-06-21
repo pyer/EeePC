@@ -1,5 +1,0 @@
-#!/bin/sh
-PATH=/sbin:/usr/sbin:/bin:/usr/bin
-for script in /etc/startup.d/S* ; do
-  "$script" start
-done
