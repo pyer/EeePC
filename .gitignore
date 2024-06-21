@@ -1,9 +1,9 @@
 # Prerequisites
-init
-runsid
-runsvdir
-runsv
-utmpset
+init/src/init
+init/src/runsid
+init/src/runsvdir
+init/src/runsv
+init/src/utmpset
 
 # Object files
 *.o

@@ -1,0 +1,12 @@
+#! /bin/sh
+
+DESC="Setting kernel variables"
+DAEMON=/sbin/sysctl
+PIDFILE=none
+
+# Comment this out for sysctl to print every item changed
+QUIET_SYSCTL="-q"
+
+STATUS=0
+$DAEMON $QUIET_SYSCTL --system || STATUS=$?
+return $STATUS

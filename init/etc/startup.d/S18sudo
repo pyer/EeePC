@@ -1,0 +1,14 @@
+
+#!/bin/sh
+# make sure privileges don't persist across reboots
+# if the /run/sudo directory doesn't exist, let's create it with the
+# correct permissions and SELinux label
+if [ -d /run/sudo ]
+then
+	find /run/sudo -exec touch -d @0 '{}' \;
+else
+	mkdir /run/sudo /run/sudo/ts
+	chown root:root /run/sudo /run/sudo/ts
+	chmod 0711 /run/sudo
+	chmod 0700 /run/sudo/ts
+fi

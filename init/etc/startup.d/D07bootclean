@@ -1,0 +1,6 @@
+#! /bin/sh
+
+. /lib/init/bootclean.sh
+
+rm -f /tmp/.clean /run/.clean /run/lock/.clean
+clean_all
