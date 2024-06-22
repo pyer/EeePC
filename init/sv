@@ -5,29 +5,39 @@ service=$2
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
-check_service() {
+if [ -z ${service} ]
+then
+  echo "ERROR: service undefined"
+  action="usage"
+else
   if [ ! -d "/etc/svdir/${service}/supervise" ]
   then
     echo "ERROR: service ${service} not found"
     exit 1
   fi
-}
+fi
 
 case "${action}" in
   up)
-    check_service
     /usr/bin/printf "u" >/etc/svdir/${service}/supervise/control
     /usr/bin/cat /etc/svdir/${service}/supervise/stat
     ;;
   down)
-    check_service
     /usr/bin/printf "d" >/etc/svdir/${service}/supervise/control
     /usr/bin/cat /etc/svdir/${service}/supervise/stat
     ;;
   status|st)
     /usr/bin/cat /etc/svdir/${service}/supervise/stat
     ;;
+  enable)
+    touch /etc/svdir/${service}/enable
+    rm -f /etc/svdir/${service}/disable
+    ;;
+  disable)
+    rm -f /etc/svdir/${service}/enable
+    touch /etc/svdir/${service}/disable
+    ;;
   *)
-    echo "Usage: sv [ down | up | status ] service"
+    echo "Usage: sv <down | up | status | enable | disable> service"
     ;;
 esac
