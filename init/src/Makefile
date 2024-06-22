@@ -11,23 +11,18 @@ default: init runsid runsv runsvdir utmpset
 
 init: init.o unix.a byte.a
 	gcc -s -o $@ $^ -static
-	cp $@ ../
 
 runsv: runsv.o unix.a byte.a time.a
 	gcc -s -o $@ $^
-	cp $@ ../
 
 runsvdir: runsvdir.o unix.a byte.a time.a
 	gcc -s -o $@ $^
-	cp $@ ../
 
 utmpset: utmpset.o unix.a byte.a
 	gcc -s -o $@ $^
-	cp $@ ../
 
 runsid: runsid.o unix.a byte.a
 	gcc -s -o $@ $^
-	cp $@ ../
 
 ####################
 #%.o: %.c

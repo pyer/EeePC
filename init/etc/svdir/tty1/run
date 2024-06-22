@@ -8,4 +8,4 @@ fi
 
 pgrep -x getty  -t tty1 && exit 163
 pgrep -x agetty -t tty1 && exit 163
-exec runsid getty 38400 tty1 linux
+exec runsid getty --noclear 38400 tty1 linux

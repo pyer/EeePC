@@ -1,11 +1,2 @@
 #!/bin/sh -euC
-DIRNAME="$(dirname ${0})"
-SERVICE="$(basename ${DIRNAME})"
-
-if [ "$1" = "163" ]
-then
-    echo "runsv ERROR: another getty already on $SERVICE"
-    echo -n "d" >"${DIRNAME}/supervise/control"
-    exit 0
-fi
-exec utmpset -w $SERVICE
+/sbin/utmpset tty6
