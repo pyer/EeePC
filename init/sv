@@ -5,37 +5,50 @@ service=$2
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
-if [ -z ${service} ]
-then
-  echo "ERROR: service undefined"
-  action="usage"
-else
+check_enabled_service() {
   if [ ! -d "/etc/svdir/${service}/supervise" ]
   then
     echo "ERROR: service ${service} not found"
     exit 1
   fi
+}
+
+check_disabled_service() {
+  if [ ! -d "/etc/svdir/${service}.disable" ]
+  then
+    echo "ERROR: service ${service} not found"
+    exit 1
+  fi
+}
+
+if [ -z ${service} ]
+then
+  echo "ERROR: service undefined"
+  action="usage"
 fi
 
 case "${action}" in
   up)
+    check_enabled_service
     /usr/bin/printf "u" >/etc/svdir/${service}/supervise/control
     /usr/bin/cat /etc/svdir/${service}/supervise/stat
     ;;
   down)
+    check_enabled_service
     /usr/bin/printf "d" >/etc/svdir/${service}/supervise/control
     /usr/bin/cat /etc/svdir/${service}/supervise/stat
     ;;
   status|st)
+    check_enabled_service
     /usr/bin/cat /etc/svdir/${service}/supervise/stat
     ;;
   enable)
-    touch /etc/svdir/${service}/enable
-    rm -f /etc/svdir/${service}/disable
+    check_disabled_service
+    /usr/bin/mv /etc/svdir/${service}.disable /etc/svdir/${service}
     ;;
   disable)
-    rm -f /etc/svdir/${service}/enable
-    touch /etc/svdir/${service}/disable
+    check_enabled_service
+    /usr/bin/mv /etc/svdir/${service} /etc/svdir/${service}.disable
     ;;
   *)
     echo "Usage: sv <down | up | status | enable | disable> service"

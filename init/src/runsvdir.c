@@ -43,8 +43,18 @@ void warn(char *m1, char *m2) {
 void warn3x(char *m1, char *m2, char *m3) {
   strerr_warn6("runsvdir ", svdir, ": warning: ", m1, m2, m3, 0);
 } 
-void s_term() { exitsoon =1; }
-void s_hangup() { exitsoon =2; }
+void s_term()   { exitsoon = 1; }
+void s_hangup() { exitsoon = 2; }
+
+int a_dot_is_in( char *p) {
+  while (*p) {
+    if (*p == '.') {
+      return 1;
+    }
+    p++;
+  }
+  return 0;
+}
 
 void runsv(int no, char *name) {
   int pid;
@@ -79,16 +89,20 @@ void runsvdir() {
     warn("unable to open directory ", svdir);
     return;
   }
-  for (i =0; i < svnum; i++) sv[i].isgone =1;
+  for (i =0; i < svnum; i++)
+    sv[i].isgone = 1;
+
   errno =0;
-  while ((d =readdir(dir))) {
-    if (d->d_name[0] == '.') continue;
+  while ((d = readdir(dir))) {
+    if ( a_dot_is_in(d->d_name) )
+      continue;
     if (stat(d->d_name, &s) == -1) {
       warn("unable to stat ", d->d_name);
       errno =0;
       continue;
     }
-    if (! S_ISDIR(s.st_mode)) continue;
+    if (! S_ISDIR(s.st_mode))
+      continue;
     for (i =0; i < svnum; i++) {
       if ((sv[i].ino == s.st_ino) && (sv[i].dev == s.st_dev)) {
         sv[i].isgone =0;
@@ -120,10 +134,13 @@ void runsvdir() {
   closedir(dir);
 
   /* SIGTERM removed runsv's */
-  for (i =0; i < svnum; i++) {
-    if (! sv[i].isgone) continue;
-    if (sv[i].pid) kill(sv[i].pid, SIGTERM);
-    sv[i] =sv[--svnum];
+  for (i = 0; i < svnum; i++) {
+    if (! sv[i].isgone)
+      continue;
+    if (sv[i].pid)
+      kill(sv[i].pid, SIGTERM);
+
+    sv[i] = sv[--svnum];
     check =1;
   }
 }
