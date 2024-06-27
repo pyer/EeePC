@@ -1,25 +1,20 @@
 #include <fcntl.h>
-#include <time.h>
-#include <sys/types.h>
+#include <sys/file.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 #include <string.h>
 #include "uw_tmp.h"
 #include "strerr.h"
-#include "sgetopt.h"
-#include "seek.h"
 #include "str.h"
 #include "open.h"
 #include "byte.h"
-#include "lock.h"
 
-#define USAGE " [-w] line"
 #define FATAL "utmpset: fatal: "
 #define WARNING "utmpset: warning: "
 
 const char *progname;
-
-void usage(void) { strerr_die4x(1, "usage: ", progname, USAGE, "\n"); }
 
 int utmp_logout(const char *line) {
   int fd;
@@ -28,7 +23,7 @@ int utmp_logout(const char *line) {
 
   if ((fd =open(UW_TMP_UFILE, O_RDWR, 0)) < 0)
     strerr_die4sys(111, FATAL, "unable to open ", UW_TMP_UFILE, ": ");
-  if (lock_ex(fd) == -1)
+  if (flock(fd,LOCK_EX) == -1)
     strerr_die4sys(111, FATAL, "unable to lock: ", UW_TMP_UFILE, ": ");
 
   while (read(fd, &ut, sizeof(uw_tmp)) == sizeof(uw_tmp)) {
@@ -55,7 +50,7 @@ int wtmp_logout(const char *line) {
 
   if ((fd = open_append(UW_TMP_WFILE)) == -1)
     strerr_die4sys(111, FATAL, "unable to open ", UW_TMP_WFILE, ": ");
-  if (lock_ex(fd) == -1)
+  if (flock(fd,LOCK_EX) == -1)
     strerr_die4sys(111, FATAL, "unable to lock ", UW_TMP_WFILE, ": ");
 
   if (fstat(fd, &st) == -1) {

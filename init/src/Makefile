@@ -99,9 +99,6 @@ byte_diff.o: byte_diff.c byte.h
 byte_rchr.o: byte_rchr.c byte.h
 	gcc $(OPTIONS) -o $@ $<
 
-coe.o: coe.c coe.h
-	gcc $(OPTIONS) -o $@ $<
-
 env.o: env.c env.h str.h
 	gcc $(OPTIONS) -o $@ $<
 
@@ -117,9 +114,6 @@ fd_copy.o: fd_copy.c fd.h
 fd_move.o: fd_move.c fd.h
 	gcc $(OPTIONS) -o $@ $<
 
-fifo.o: fifo.c fifo.h hasmkffo.h
-	gcc $(OPTIONS) -o $@ $<
-
 fmt_uint.o: fmt_uint.c fmt.h
 	gcc $(OPTIONS) -o $@ $<
 
@@ -130,12 +124,6 @@ fmt_ulong.o: fmt_ulong.c fmt.h
 	gcc $(OPTIONS) -o $@ $<
 
 iopause.o: iopause.c iopause.h select.h tai.h taia.h uint64.h
-	gcc $(OPTIONS) -o $@ $<
-
-lock_ex.o: lock_ex.c hasflock.h lock.h
-	gcc $(OPTIONS) -o $@ $<
-
-lock_exnb.o: lock_exnb.c hasflock.h lock.h
 	gcc $(OPTIONS) -o $@ $<
 
 ndelay_off.o: ndelay_off.c ndelay.h
@@ -163,15 +151,6 @@ openreadclose.h readclose.h stralloc.h
 readclose.o: error.h gen_alloc.h readclose.c readclose.h \
 stralloc.h
 	gcc $(OPTIONS) -o $@ readclose.c
-
-scan_ulong.o: scan_ulong.c scan.h
-	gcc $(OPTIONS) -o $@ $<
-
-seek_set.o: seek_set.c seek.h
-	gcc $(OPTIONS) -o $@ $<
-
-sgetopt.o: sgetopt.c sgetopt.h subgetopt.h buffer.h
-	gcc $(OPTIONS) -o $@ $<
 
 sig_block.o: sig_block.c sig.h
 	gcc $(OPTIONS) -o $@ $<
@@ -227,9 +206,6 @@ strerr_die.o: buffer.h strerr.h strerr_die.c
 strerr_sys.o: error.h strerr.h strerr_sys.c
 	gcc $(OPTIONS) -o $@ strerr_sys.c
 
-subgetopt.o: subgetopt.c subgetopt.h
-	gcc $(OPTIONS) -o $@ $<
-
 tai_now.o: tai.h tai_now.c uint64.h
 	gcc $(OPTIONS) -o $@ tai_now.c
 
@@ -266,20 +242,20 @@ taia_sub.o: tai.h taia.h taia_sub.c uint64.h
 taia_uint.o: tai.h taia.h taia_uint.c uint64.h
 	gcc $(OPTIONS) -o $@ taia_uint.c
 
-wait_nohang.o: wait_nohang.c haswaitp.h
+wait_nohang.o: wait_nohang.c
 	gcc $(OPTIONS) -o $@ $<
 
-wait_pid.o: wait_pid.c error.h haswaitp.h
+wait_pid.o: wait_pid.c error.h
 	gcc $(OPTIONS) -o $@ $<
 
 ####################
 
 byte.a: byte_chr.o byte_copy.o byte_cr.o byte_diff.o byte_rchr.o \
-fmt_uint.o fmt_uint0.o fmt_ulong.o scan_ulong.o str_chr.o \
+fmt_uint.o fmt_uint0.o fmt_ulong.o str_chr.o \
 str_diff.o str_len.o str_start.o
 	rm -f byte.a
 	ar cr byte.a byte_chr.o byte_copy.o byte_cr.o byte_diff.o \
-	byte_rchr.o fmt_uint.o fmt_uint0.o fmt_ulong.o scan_ulong.o str_chr.o \
+	byte_rchr.o fmt_uint.o fmt_uint0.o fmt_ulong.o str_chr.o \
 	str_diff.o str_len.o str_start.o
 	ranlib byte.a
 
@@ -293,23 +269,23 @@ taia_pack.o taia_sub.o taia_uint.o
 	ranlib time.a
 
 unix.a: alloc.o alloc_re.o buffer.o buffer_0.o buffer_1.o buffer_2.o \
-buffer_get.o buffer_put.o buffer_read.o buffer_write.o coe.o env.o \
-error.o error_str.o fd_copy.o fd_move.o fifo.o lock_ex.o lock_exnb.o \
+buffer_get.o buffer_put.o buffer_read.o buffer_write.o env.o \
+error.o error_str.o fd_copy.o fd_move.o \
 ndelay_off.o ndelay_on.o open_append.o open_read.o \
-open_trunc.o open_write.o openreadclose.o readclose.o seek_set.o sgetopt.o \
+open_trunc.o open_write.o openreadclose.o readclose.o \
 sig_block.o sig_catch.o sig_pause.o stralloc_cat.o stralloc_catb.o \
 stralloc_cats.o stralloc_eady.o stralloc_opyb.o stralloc_opys.o \
-stralloc_pend.o strerr_die.o strerr_sys.o subgetopt.o wait_nohang.o \
+stralloc_pend.o strerr_die.o strerr_sys.o wait_nohang.o \
 wait_pid.o
 	rm -f unix.a
 	ar cr unix.a alloc.o alloc_re.o buffer.o buffer_0.o buffer_1.o buffer_2.o \
-	buffer_get.o buffer_put.o buffer_read.o buffer_write.o coe.o env.o \
-	error.o error_str.o fd_copy.o fd_move.o fifo.o lock_ex.o lock_exnb.o \
+	buffer_get.o buffer_put.o buffer_read.o buffer_write.o env.o \
+	error.o error_str.o fd_copy.o fd_move.o \
 	ndelay_off.o ndelay_on.o open_append.o open_read.o \
-	open_trunc.o open_write.o openreadclose.o readclose.o seek_set.o sgetopt.o \
+	open_trunc.o open_write.o openreadclose.o readclose.o \
 	sig_block.o sig_catch.o sig_pause.o stralloc_cat.o stralloc_catb.o \
 	stralloc_cats.o stralloc_eady.o stralloc_opyb.o stralloc_opys.o \
-	stralloc_pend.o strerr_die.o strerr_sys.o subgetopt.o wait_nohang.o \
+	stralloc_pend.o strerr_die.o strerr_sys.o wait_nohang.o \
 	wait_pid.o
 	ranlib unix.a
 
@@ -320,3 +296,5 @@ clean:
 	rm -f *.a
 	rm -f *~
 
+clobber: clean
+	rm -f init runsid runsv runsvdir utmpset

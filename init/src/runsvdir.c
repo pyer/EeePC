@@ -59,7 +59,7 @@ int a_dot_is_in( char *p) {
 void runsv(int no, char *name) {
   int pid;
 
-  if ((pid =fork()) == -1) {
+  if ((pid = fork()) == -1) {
     warn("unable to fork for ", name);
     return;
   }
@@ -67,16 +67,16 @@ void runsv(int no, char *name) {
     /* child */
     const char *prog[3];
 
-    prog[0] ="/sbin/runsv";
-    prog[1] =name;
-    prog[2] =0;
+    prog[0] = "/sbin/runsv";
+    prog[1] = name;
+    prog[2] = 0;
     sig_uncatch(SIGHUP);
     sig_uncatch(SIGTERM);
     setsid();
     execve(*prog, (char * const*)prog, (char* const*)environ);
     fatal("unable to start runsv ", name);
   }
-  sv[no].pid =pid;
+  sv[no].pid = pid;
 }
 
 void runsvdir() {

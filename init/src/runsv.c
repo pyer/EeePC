@@ -1,5 +1,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/file.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <signal.h>
@@ -8,11 +10,8 @@
 #include "taia.h"
 #include "sig.h"
 #include "env.h"
-#include "coe.h"
 #include "ndelay.h"
-#include "fifo.h"
 #include "open.h"
-#include "lock.h"
 #include "iopause.h"
 #include "wait.h"
 #include "fd.h"
@@ -21,8 +20,6 @@
 #include "byte.h"
 
 #define USAGE " dir"
-
-#define VERSION "$Id: ecf467746d7b97ff0fddb88b9d44cca201c74160 $"
 
 char *progname;
 int selfpipe[2];
@@ -79,6 +76,11 @@ void warn2(char *m1, char *m2) {
 }
 void warnx(char *m1, char *m2, char *m3) {
   strerr_warn6("runsv ", dir, ": warning: ", m1, m2, m3, 0);
+}
+
+int coe(int fd)
+{
+  return fcntl(fd,F_SETFD,1);
 }
 
 void stopservice(struct svdir *);
@@ -449,7 +451,8 @@ int main(int argc, char **argv) {
   }
   if ((svd[0].fdlock =open_append("supervise/lock")) == -1)
     fatal("unable to open supervise/lock");
-  if (lock_exnb(svd[0].fdlock) == -1) fatal("unable to lock supervise/lock");
+  if (flock(svd[0].fdlock,LOCK_EX | LOCK_NB) == -1)
+    fatal("unable to lock supervise/lock");
   coe(svd[0].fdlock);
   if (haslog) {
     if (mkdir("log/supervise", 0700) == -1) {
@@ -473,12 +476,12 @@ int main(int argc, char **argv) {
     }
     if ((svd[1].fdlock =open_append("log/supervise/lock")) == -1)
       fatal("unable to open log/supervise/lock");
-    if (lock_ex(svd[1].fdlock) == -1)
+    if (flock(svd[1].fdlock,LOCK_EX) == -1)
       fatal("unable to lock log/supervise/lock");
     coe(svd[1].fdlock);
   }
 
-  fifo_make("supervise/control", 0600);
+  mkfifo("supervise/control", 0600);
   if (stat("supervise/control", &s) == -1)
     fatal("unable to stat supervise/control");
   if (!S_ISFIFO(s.st_mode))
@@ -491,7 +494,7 @@ int main(int argc, char **argv) {
   coe(svd[0].fdcontrolwrite);
   update_status(&svd[0]);
   if (haslog) {
-    fifo_make("log/supervise/control", 0600);
+    mkfifo("log/supervise/control", 0600);
     if (stat("supervise/control", &s) == -1)
       fatal("unable to stat log/supervise/control");
     if (!S_ISFIFO(s.st_mode))
@@ -504,12 +507,12 @@ int main(int argc, char **argv) {
     coe(svd[1].fdcontrolwrite);
     update_status(&svd[1]);
   }
-  fifo_make("supervise/ok",0600);
+  mkfifo("supervise/ok",0600);
   if ((fd =open_read("supervise/ok")) == -1)
     fatal("unable to read supervise/ok");
   coe(fd);
   if (haslog) {
-    fifo_make("log/supervise/ok",0600);
+    mkfifo("log/supervise/ok",0600);
     if ((fd =open_read("log/supervise/ok")) == -1)
       fatal("unable to read log/supervise/ok");
     coe(fd);

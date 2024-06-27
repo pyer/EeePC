@@ -16,7 +16,7 @@ check_enabled_service() {
 check_disabled_service() {
   if [ ! -d "/etc/svdir/${service}.disable" ]
   then
-    echo "ERROR: service ${service} not found"
+    echo "ERROR: service ${service} is not disabled"
     exit 1
   fi
 }
@@ -48,6 +48,7 @@ case "${action}" in
     ;;
   disable)
     check_enabled_service
+    /usr/bin/printf "d" >/etc/svdir/${service}/supervise/control
     /usr/bin/mv /etc/svdir/${service} /etc/svdir/${service}.disable
     ;;
   *)
