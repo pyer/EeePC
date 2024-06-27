@@ -8,4 +8,4 @@ fi
 
 pgrep -x getty  -t tty5 && exit 163
 pgrep -x agetty -t tty5 && exit 163
-exec runsid getty 38400 tty5 linux
+exec setsid getty 38400 tty5 linux

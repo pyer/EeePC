@@ -5,7 +5,7 @@ OPTIONS=-O2 -Wall -c
 
 ####################
 
-default: init runsid runsv runsvdir utmpset
+default: init runsv runsvdir utmpset
 
 ####################
 
@@ -21,18 +21,12 @@ runsvdir: runsvdir.o unix.a byte.a time.a
 utmpset: utmpset.o unix.a byte.a
 	gcc -s -o $@ $^
 
-runsid: runsid.o unix.a byte.a
-	gcc -s -o $@ $^
-
 ####################
 #%.o: %.c
 #	gcc $(OPTIONS) -o $@ $<
 ####################
 
 init.o: init.c
-	gcc $(OPTIONS) -o $@ $<
-
-runsid.o: runsid.c
 	gcc $(OPTIONS) -o $@ $<
 
 runsv.o: runsv.c
@@ -297,4 +291,4 @@ clean:
 	rm -f *~
 
 clobber: clean
-	rm -f init runsid runsv runsvdir utmpset
+	rm -f init runsv runsvdir utmpset
