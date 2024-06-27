@@ -46,15 +46,6 @@ void warn3x(char *m1, char *m2, char *m3) {
 void s_term()   { exitsoon = 1; }
 void s_hangup() { exitsoon = 2; }
 
-int a_dot_is_in( char *p) {
-  while (*p) {
-    if (*p == '.') {
-      return 1;
-    }
-    p++;
-  }
-  return 0;
-}
 
 void runsv(int no, char *name) {
   int pid;
@@ -94,7 +85,7 @@ void runsvdir() {
 
   errno =0;
   while ((d = readdir(dir))) {
-    if ( a_dot_is_in(d->d_name) )
+    if ( d->d_name[0] == '.' )
       continue;
     if (stat(d->d_name, &s) == -1) {
       warn("unable to stat ", d->d_name);
