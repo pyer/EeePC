@@ -9,16 +9,20 @@ default: init runsv runsvdir utmpset
 
 ####################
 
-init: init.o unix.a byte.a
-	gcc -s -o $@ $^ -static
+init: init.o log.a sig.a str.a wait.a
+	gcc -s -o $@ $^
+	#gcc -s -o $@ $^ -static
 
-runsv: runsv.o unix.a byte.a time.a
+#runsv: runsv.o unix.a byte.a time.a
+runsv: runsv.o log.a sig.a str.a time.a wait.a
 	gcc -s -o $@ $^
 
-runsvdir: runsvdir.o unix.a byte.a time.a
+#runsvdir: runsvdir.o unix.a byte.a time.a
+runsvdir: runsvdir.o log.a sig.a str.a time.a wait.a
 	gcc -s -o $@ $^
 
-utmpset: utmpset.o unix.a byte.a
+#utmpset: utmpset.o unix.a byte.a
+utmpset: utmpset.o log.a str.a
 	gcc -s -o $@ $^
 
 ####################
@@ -48,103 +52,14 @@ fmt_ptime.o: fmt_ptime.c
 
 ####################
 
-alloc.o: alloc.c alloc.h error.h
+iopause.o: iopause.c iopause.h tai.h taia.h uint64.h
 	gcc $(OPTIONS) -o $@ $<
 
-alloc_re.o: alloc_re.c alloc.h byte.h
+log.o: log.c log.h
 	gcc $(OPTIONS) -o $@ $<
 
-buffer.o: buffer.c buffer.h
+log_errno.o: log_errno.c log.h
 	gcc $(OPTIONS) -o $@ $<
-
-buffer_0.o: buffer_0.c buffer.h
-	gcc $(OPTIONS) -o $@ $<
-
-buffer_1.o: buffer_1.c buffer.h
-	gcc $(OPTIONS) -o $@ $<
-
-buffer_2.o: buffer_2.c buffer.h
-	gcc $(OPTIONS) -o $@ $<
-
-buffer_get.o: buffer_get.c buffer.h byte.h error.h
-	gcc $(OPTIONS) -o $@ $<
-
-buffer_put.o: buffer_put.c buffer.h byte.h error.h str.h
-	gcc $(OPTIONS) -o $@ $<
-
-buffer_read.o: buffer_read.c buffer.h
-	gcc $(OPTIONS) -o $@ $<
-
-buffer_write.o: buffer_write.c buffer.h
-	gcc $(OPTIONS) -o $@ $<
-
-byte_chr.o: byte_chr.c byte.h
-	gcc $(OPTIONS) -o $@ $<
-
-byte_copy.o: byte_copy.c byte.h
-	gcc $(OPTIONS) -o $@ $<
-
-byte_cr.o: byte_cr.c byte.h
-	gcc $(OPTIONS) -o $@ $<
-
-byte_diff.o: byte_diff.c byte.h
-	gcc $(OPTIONS) -o $@ $<
-
-byte_rchr.o: byte_rchr.c byte.h
-	gcc $(OPTIONS) -o $@ $<
-
-env.o: env.c env.h str.h
-	gcc $(OPTIONS) -o $@ $<
-
-error.o: error.c error.h
-	gcc $(OPTIONS) -o $@ $<
-
-error_str.o: error_str.c error.h
-	gcc $(OPTIONS) -o $@ $<
-
-fd_copy.o: fd_copy.c fd.h
-	gcc $(OPTIONS) -o $@ $<
-
-fd_move.o: fd_move.c fd.h
-	gcc $(OPTIONS) -o $@ $<
-
-fmt_uint.o: fmt_uint.c fmt.h
-	gcc $(OPTIONS) -o $@ $<
-
-fmt_uint0.o: fmt_uint0.c fmt.h
-	gcc $(OPTIONS) -o $@ $<
-
-fmt_ulong.o: fmt_ulong.c fmt.h
-	gcc $(OPTIONS) -o $@ $<
-
-iopause.o: iopause.c iopause.h select.h tai.h taia.h uint64.h
-	gcc $(OPTIONS) -o $@ $<
-
-ndelay_off.o: ndelay_off.c ndelay.h
-	gcc $(OPTIONS) -o $@ $<
-
-ndelay_on.o: ndelay_on.c ndelay.h
-	gcc $(OPTIONS) -o $@ $<
-
-open_append.o: open.h open_append.c
-	gcc $(OPTIONS) -o $@ open_append.c
-
-open_read.o: open.h open_read.c
-	gcc $(OPTIONS) -o $@ open_read.c
-
-open_trunc.o: open.h open_trunc.c
-	gcc $(OPTIONS) -o $@ open_trunc.c
-
-open_write.o: open.h open_write.c
-	gcc $(OPTIONS) -o $@ open_write.c
-
-openreadclose.o: error.h gen_alloc.h open.h openreadclose.c \
-openreadclose.h readclose.h stralloc.h
-	gcc $(OPTIONS) -o $@ openreadclose.c
-
-readclose.o: error.h gen_alloc.h readclose.c readclose.h \
-stralloc.h
-	gcc $(OPTIONS) -o $@ readclose.c
 
 sig_block.o: sig_block.c sig.h
 	gcc $(OPTIONS) -o $@ $<
@@ -161,44 +76,14 @@ str_chr.o: str.h str_chr.c
 str_diff.o: str.h str_diff.c
 	gcc $(OPTIONS) -o $@ str_diff.c
 
+str_equal.o: str.h str_equal.c
+	gcc $(OPTIONS) -o $@ str_equal.c
+
 str_len.o: str.h str_len.c
 	gcc $(OPTIONS) -o $@ str_len.c
 
 str_start.o: str.h str_start.c
 	gcc $(OPTIONS) -o $@ str_start.c
-
-stralloc_cat.o: byte.h gen_alloc.h stralloc.h stralloc_cat.c
-	gcc $(OPTIONS) -o $@ stralloc_cat.c
-
-stralloc_catb.o: byte.h gen_alloc.h stralloc.h \
-stralloc_catb.c
-	gcc $(OPTIONS) -o $@ stralloc_catb.c
-
-stralloc_cats.o: byte.h gen_alloc.h str.h stralloc.h \
-stralloc_cats.c
-	gcc $(OPTIONS) -o $@ stralloc_cats.c
-
-stralloc_eady.o: alloc.h gen_alloc.h gen_allocdefs.h \
-stralloc.h stralloc_eady.c
-	gcc $(OPTIONS) -o $@ stralloc_eady.c
-
-stralloc_opyb.o: byte.h gen_alloc.h stralloc.h \
-stralloc_opyb.c
-	gcc $(OPTIONS) -o $@ stralloc_opyb.c
-
-stralloc_opys.o: byte.h gen_alloc.h str.h stralloc.h \
-stralloc_opys.c
-	gcc $(OPTIONS) -o $@ stralloc_opys.c
-
-stralloc_pend.o: alloc.h gen_alloc.h gen_allocdefs.h \
-stralloc.h stralloc_pend.c
-	gcc $(OPTIONS) -o $@ stralloc_pend.c
-
-strerr_die.o: buffer.h strerr.h strerr_die.c
-	gcc $(OPTIONS) -o $@ strerr_die.c
-
-strerr_sys.o: error.h strerr.h strerr_sys.c
-	gcc $(OPTIONS) -o $@ strerr_sys.c
 
 tai_now.o: tai.h tai_now.c uint64.h
 	gcc $(OPTIONS) -o $@ tai_now.c
@@ -239,19 +124,34 @@ taia_uint.o: tai.h taia.h taia_uint.c uint64.h
 wait_nohang.o: wait_nohang.c
 	gcc $(OPTIONS) -o $@ $<
 
-wait_pid.o: wait_pid.c error.h
+wait_pid.o: wait_pid.c
 	gcc $(OPTIONS) -o $@ $<
 
 ####################
 
 byte.a: byte_chr.o byte_copy.o byte_cr.o byte_diff.o byte_rchr.o \
-fmt_uint.o fmt_uint0.o fmt_ulong.o str_chr.o \
-str_diff.o str_len.o str_start.o
+fmt_uint.o fmt_uint0.o fmt_ulong.o \
+str_chr.o str_diff.o str_len.o str_start.o
 	rm -f byte.a
 	ar cr byte.a byte_chr.o byte_copy.o byte_cr.o byte_diff.o \
-	byte_rchr.o fmt_uint.o fmt_uint0.o fmt_ulong.o str_chr.o \
-	str_diff.o str_len.o str_start.o
+	byte_rchr.o fmt_uint.o fmt_uint0.o fmt_ulong.o \
+	str_chr.o str_diff.o str_len.o str_start.o
 	ranlib byte.a
+
+log.a: log.o
+	rm -f log.a
+	ar cr log.a log.o
+	ranlib log.a
+
+str.a: str_equal.o str_len.o
+	rm -f str.a
+	ar cr str.a str_equal.o str_len.o
+	ranlib str.a
+
+sig.a: sig_block.o sig_catch.o sig_pause.o
+	rm -f sig.a
+	ar cr sig.a sig_block.o sig_catch.o sig_pause.o
+	ranlib sig.a
 
 time.a: iopause.o tai_now.o tai_pack.o tai_sub.o tai_unpack.o \
 taia_add.o taia_approx.o taia_frac.o taia_less.o taia_now.o \
@@ -262,26 +162,10 @@ taia_pack.o taia_sub.o taia_uint.o
 	taia_now.o taia_pack.o taia_sub.o taia_uint.o
 	ranlib time.a
 
-unix.a: alloc.o alloc_re.o buffer.o buffer_0.o buffer_1.o buffer_2.o \
-buffer_get.o buffer_put.o buffer_read.o buffer_write.o env.o \
-error.o error_str.o fd_copy.o fd_move.o \
-ndelay_off.o ndelay_on.o open_append.o open_read.o \
-open_trunc.o open_write.o openreadclose.o readclose.o \
-sig_block.o sig_catch.o sig_pause.o stralloc_cat.o stralloc_catb.o \
-stralloc_cats.o stralloc_eady.o stralloc_opyb.o stralloc_opys.o \
-stralloc_pend.o strerr_die.o strerr_sys.o wait_nohang.o \
-wait_pid.o
-	rm -f unix.a
-	ar cr unix.a alloc.o alloc_re.o buffer.o buffer_0.o buffer_1.o buffer_2.o \
-	buffer_get.o buffer_put.o buffer_read.o buffer_write.o env.o \
-	error.o error_str.o fd_copy.o fd_move.o \
-	ndelay_off.o ndelay_on.o open_append.o open_read.o \
-	open_trunc.o open_write.o openreadclose.o readclose.o \
-	sig_block.o sig_catch.o sig_pause.o stralloc_cat.o stralloc_catb.o \
-	stralloc_cats.o stralloc_eady.o stralloc_opyb.o stralloc_opys.o \
-	stralloc_pend.o strerr_die.o strerr_sys.o wait_nohang.o \
-	wait_pid.o
-	ranlib unix.a
+wait.a: wait_nohang.o wait_pid.o
+	rm -f wait.a
+	ar cr wait.a wait_nohang.o wait_pid.o
+	ranlib wait.a
 
 ####################
 
@@ -290,5 +174,5 @@ clean:
 	rm -f *.a
 	rm -f *~
 
-clobber: clean
+cleaner: clean
 	rm -f init runsv runsvdir utmpset

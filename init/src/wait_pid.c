@@ -1,8 +1,8 @@
 /* Public domain. */
 
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "error.h"
 
 int wait_pid(wstat,pid) int *wstat; int pid;
 {
@@ -10,6 +10,6 @@ int wait_pid(wstat,pid) int *wstat; int pid;
 
   do
     r = waitpid(pid,wstat,0);
-  while ((r == -1) && (errno == error_intr));
+  while ((r == -1) && (errno == EINTR));
   return r;
 }

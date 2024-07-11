@@ -1,9 +1,11 @@
 # Prerequisites
 init/src/init
-init/src/runsid
-init/src/runsvdir
 init/src/runsv
+init/src/runsvdir
 init/src/utmpset
+
+# Temporary files
+*~
 
 # Object files
 *.o
