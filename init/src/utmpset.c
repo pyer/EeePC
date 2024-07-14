@@ -1,3 +1,4 @@
+
 #include <fcntl.h>
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -40,7 +41,8 @@ int utmp_logout(const char *line) {
       continue;
     memset(ut.ut_name, 0, sizeof ut.ut_name);
     memset(ut.ut_host, 0, sizeof ut.ut_host);
-    if (time(&ut.ut_time) == -1)
+    ut.ut_time = time(NULL);
+    if (ut.ut_time == -1)
       break;
 #ifdef DEAD_PROCESS
     ut.ut_type =DEAD_PROCESS;
@@ -72,7 +74,8 @@ int wtmp_logout(const char *line) {
   if ((len =str_len(line)) > sizeof ut.ut_line)
     len =sizeof ut.ut_line - 2;
   memcpy(ut.ut_line, line, len);
-  if (time(&ut.ut_time) == -1) {
+  ut.ut_time = time(NULL);
+  if (ut.ut_time == -1) {
     close(fd);
     return(-1);
   }
