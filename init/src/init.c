@@ -1,17 +1,18 @@
+/* init.c */
+#include <fcntl.h>
+#include <poll.h>
+#include <signal.h>
+#include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 #include <sys/reboot.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <signal.h>
-#include <unistd.h>
-#include <fcntl.h>
+
 #include "sig.h"
 #include "str.h"
 #include "strerr.h"
 #include "error.h"
-#include "iopause.h"
-#include "ndelay.h"
 #include "wait.h"
 #include "open.h"
 
@@ -54,6 +55,33 @@ void sig_child_handler(void) {
   write(selfpipe[1], "", 1);
 }
 
+void shutdown(char *mode) {
+    char *flagname = HALT;
+
+    unlink(HALT);
+    unlink(POWEROFF);
+    unlink(REBOOT);
+
+    int i = str_len(mode);
+    while (i > 0 && mode[i-1] != '/') {
+      i--;
+    }
+    mode += i;
+
+    if (str_equal(mode, "poweroff"))
+      flagname = POWEROFF;
+    if (str_equal(mode, "reboot"))
+      flagname = REBOOT;
+
+    int fd = creat(flagname, 0600);
+    if (fd < 0 ) {
+      strerr_warn4(FATAL, "unable to create " , flagname, "\n", 0);
+    } else {
+      close(fd);
+      kill(1, SIGCONT);
+    }
+}
+
 /*
  * main entry
  */
@@ -62,36 +90,15 @@ int main(int argc, char *argv[], char * const *envp) {
   int pid;
   int wstat;
   int st;
-  iopause_fd x;
+  struct pollfd polled_pipe;
   char ch;
   int ttyfd;
-  char *flagname = HALT;
   char *progname = argv[0];
   int reboot_mode = 0;
 
-
-
   if (getpid() != 1) {
-    unlink(HALT);
-    unlink(POWEROFF);
-    unlink(REBOOT);
-
-    int i = str_len(progname);
-    while (i > 0 && progname[i-1] != '/') {
-      i--;
-    }
-    progname += i;
-
-    if (str_equal(progname, "poweroff"))
-      flagname = POWEROFF;
-    if (str_equal(progname, "reboot"))
-      flagname = REBOOT;
-
-    int fd = creat(flagname, 0600);
-    if (fd < 0 )
-        strerr_die4x(0, FATAL, "unable to create " , flagname, "\n");
-    close(fd);
-    kill(1, SIGCONT);
+    // calling init after boot
+    shutdown(progname);
     _exit(0);
   }
 
@@ -119,10 +126,10 @@ int main(int argc, char *argv[], char * const *envp) {
     strerr_warn2(FATAL, "unable to create selfpipe, pausing: ", &strerr_sys);
     sleep(5);
   }
-  fcntl(selfpipe[0], F_SETFD, 1);
-  fcntl(selfpipe[1], F_SETFD, 1);
-  ndelay_on(selfpipe[0]);
-  ndelay_on(selfpipe[1]);
+  fcntl(selfpipe[0], F_SETFD, FD_CLOEXEC);
+  fcntl(selfpipe[1], F_SETFD, FD_CLOEXEC);
+  fcntl(selfpipe[0], F_SETFL, fcntl(selfpipe[0],F_GETFL,0) | O_NONBLOCK);
+  fcntl(selfpipe[1], F_SETFL, fcntl(selfpipe[1],F_GETFL,0) | O_NONBLOCK);
 
 #ifdef RB_DISABLE_CAD
   /* activate ctrlaltdel handling, glibc, dietlibc */
@@ -134,8 +141,7 @@ int main(int argc, char *argv[], char * const *envp) {
   /* init loop */
   for (st =0; st < 3; st++) {
     while ((pid =fork()) == -1) {
-      strerr_warn4(FATAL, "unable to fork for \"", stage[st], "\" pausing: ",
-                   &strerr_sys);
+      strerr_warn4(FATAL, "unable to fork for \"", stage[st], "\" pausing: ", &strerr_sys);
       sleep(5);
     }
     if (!pid) {
@@ -151,12 +157,12 @@ int main(int argc, char *argv[], char * const *envp) {
 #endif
           dup2(ttyfd, 0);
           if (ttyfd > 2) close(ttyfd);
-        }
-        else
+        } else {
           strerr_warn2(WARNING, "unable to open /dev/console: ", &strerr_sys);
-      }
-      else
+        }
+      } else {
         setsid();
+      }
 
       sig_unblock(SIGALRM);
       sig_unblock(SIGCHLD);
@@ -174,8 +180,8 @@ int main(int argc, char *argv[], char * const *envp) {
       strerr_die4sys(0, FATAL, "unable to start child: ", stage[st], ": ");
     }
 
-    x.fd =selfpipe[0];
-    x.events =IOPAUSE_READ;
+    polled_pipe.fd =selfpipe[0];
+    polled_pipe.events = POLLIN;
     for (;;) {
       int child;
 
@@ -183,7 +189,7 @@ int main(int argc, char *argv[], char * const *envp) {
       sig_unblock(SIGCONT);
       sig_unblock(SIGINT);
       // poll with 14 s timeout
-      poll(&x, 1, 14000);
+      poll(&polled_pipe, 1, 14000);
       sig_block(SIGCONT);
       sig_block(SIGCHLD);
       sig_block(SIGINT);
@@ -323,9 +329,6 @@ int main(int argc, char *argv[], char * const *envp) {
   }
   strerr_warn2(INFO, "system is down.", 0);
   reboot(reboot_mode);
-
-  /* not reached */
-  strerr_die2x(0, INFO, "exit.");
   return(0);
 }
 
