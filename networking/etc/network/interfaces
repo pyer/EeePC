@@ -1,0 +1,19 @@
+#------------------------------------------------------------------------------
+# /etc/network/interfaces
+#
+# interfaces(5) file used by ifup(8) and ifdown(8)
+# Used by ceni but not by connman
+#------------------------------------------------------------------------------
+
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+#allow-hotplug eth0
+iface eth0 inet dhcp
+
+# The wifi network interface
+allow-hotplug wlan0
+iface wlan0 inet dhcp
+    wpa-ssid SFR_BB5F
+    wpa-psk "********"
