@@ -1,3 +1,8 @@
+/* init.c */
+#include <fcntl.h>
+#include <poll.h>
+#include <signal.h>
+#include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 #include <sys/reboot.h>
@@ -53,6 +58,33 @@ void sig_child_handler(void) {
   write(selfpipe[1], "", 1);
 }
 
+void shutdown(char *mode) {
+    char *flagname = HALT;
+
+    unlink(HALT);
+    unlink(POWEROFF);
+    unlink(REBOOT);
+
+    int i = str_len(mode);
+    while (i > 0 && mode[i-1] != '/') {
+      i--;
+    }
+    mode += i;
+
+    if (str_equal(mode, "poweroff"))
+      flagname = POWEROFF;
+    if (str_equal(mode, "reboot"))
+      flagname = REBOOT;
+
+    int fd = creat(flagname, 0600);
+    if (fd < 0 ) {
+      strerr_warn4(FATAL, "unable to create " , flagname, "\n", 0);
+    } else {
+      close(fd);
+      kill(1, SIGCONT);
+    }
+}
+
 /*
  * main entry
  */
@@ -61,10 +93,9 @@ int main(int argc, char *argv[], char * const *envp) {
   int pid;
   int wstat;
   int st;
-  iopause_fd x;
+  struct pollfd polled_pipe;
   char ch;
   int ttyfd;
-  char *flagname = HALT;
   char *progname = argv[0];
   int reboot_mode = 0;
 
@@ -173,8 +204,8 @@ int main(int argc, char *argv[], char * const *envp) {
       _exit(1);
     }
 
-    x.fd =selfpipe[0];
-    x.events =IOPAUSE_READ;
+    polled_pipe.fd =selfpipe[0];
+    polled_pipe.events = POLLIN;
     for (;;) {
       int child;
 
@@ -182,7 +213,7 @@ int main(int argc, char *argv[], char * const *envp) {
       sig_unblock(SIGCONT);
       sig_unblock(SIGINT);
       // poll with 14 s timeout
-      poll(&x, 1, 14000);
+      poll(&polled_pipe, 1, 14000);
       sig_block(SIGCONT);
       sig_block(SIGCHLD);
       sig_block(SIGINT);
@@ -321,8 +352,6 @@ int main(int argc, char *argv[], char * const *envp) {
   }
   log_info(LOG_PREFIX, "system is down.", 0);
   reboot(reboot_mode);
-
   /* not reached */
-  return(0);
 }
 
