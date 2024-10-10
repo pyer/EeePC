@@ -3,9 +3,6 @@
 #ifndef IOPAUSE_H
 #define IOPAUSE_H
 
-/* sysdep: +poll */
-#define IOPAUSE_POLL
-
 #include <sys/types.h>
 #include <poll.h>
 

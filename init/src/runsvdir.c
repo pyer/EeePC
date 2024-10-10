@@ -1,25 +1,22 @@
 /* runsvdir.c */
 #include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "strerr.h"
-#include "error.h"
-#include "wait.h"
-#include "env.h"
-#include "open.h"
-#include "fd.h"
-#include "str.h"
 #include "iopause.h"
+#include "log.h"
 #include "sig.h"
-#include "ndelay.h"
+#include "str.h"
+#include "wait.h"
 
 #define MAXSERVICES 1000
 
 char *svdir = "/etc/svdir";
+char * const *environ;
 
 unsigned long dev =0;
 unsigned long ino =0;
@@ -34,15 +31,6 @@ int check =1;
 iopause_fd io[1];
 int exitsoon =0;
 
-void fatal(char *m1, char *m2) {
-  strerr_die6sys(100, "runsvdir ", svdir, ": fatal: ", m1, m2, ": ");
-}
-void warn(char *m1, char *m2) {
-  strerr_warn6("runsvdir ", svdir, ": warning: ", m1, m2, ": ", &strerr_sys);
-}
-void warn3x(char *m1, char *m2, char *m3) {
-  strerr_warn6("runsvdir ", svdir, ": warning: ", m1, m2, m3, 0);
-} 
 void s_term()   { exitsoon = 1; }
 void s_hangup() { exitsoon = 2; }
 
@@ -51,7 +39,7 @@ void runsv(int no, char *name) {
   int pid;
 
   if ((pid = fork()) == -1) {
-    warn("unable to fork for ", name);
+    log_warn("runsvdir", "unable to fork for ", name);
     return;
   }
   if (pid == 0) {
@@ -65,7 +53,8 @@ void runsv(int no, char *name) {
     sig_uncatch(SIGTERM);
     setsid();
     execve(*prog, (char * const*)prog, (char* const*)environ);
-    fatal("unable to start runsv ", name);
+    log_error("runsvdir", "unable to start runsv ", name);
+    _exit(100);
   }
   sv[no].pid = pid;
 }
@@ -77,19 +66,19 @@ void runsvdir() {
   struct stat s;
 
   if (! (dir =opendir("."))) {
-    warn("unable to open directory ", svdir);
+    log_warn("runsvdir", "unable to open directory ", svdir);
     return;
   }
   for (i =0; i < svnum; i++)
     sv[i].isgone = 1;
 
-  errno =0;
+  errno = 0;
   while ((d = readdir(dir))) {
     if ( d->d_name[0] == '.' )
       continue;
     if (stat(d->d_name, &s) == -1) {
-      warn("unable to stat ", d->d_name);
-      errno =0;
+      log_warn("runsvdir", "unable to stat ", d->d_name);
+      errno = 0;
       continue;
     }
     if (! S_ISDIR(s.st_mode))
@@ -104,7 +93,7 @@ void runsvdir() {
     if (i == svnum) {
       /* new service */
       if (svnum >= MAXSERVICES) {
-        warn3x("unable to start runsv ", d->d_name, ": too many services.");
+        log_warn("runsvdir", "too many services: unable to start ", d->d_name);
         continue;
       }
       sv[i].ino =s.st_ino;
@@ -117,7 +106,7 @@ void runsvdir() {
     }
   }
   if (errno) {
-    warn("unable to read directory ", svdir);
+    log_warn("runsvdir", "unable to read directory ", svdir);
     closedir(dir);
     check =1;
     return;
@@ -136,7 +125,10 @@ void runsvdir() {
   }
 }
 
-int main(int argc, char **argv) {
+/*
+ * main entry
+ */
+int main(int argc, char *argv[], char * const *envp) {
   struct stat s;
   time_t mtime =0;
   int wstat;
@@ -147,14 +139,20 @@ int main(int argc, char **argv) {
   struct taia stampcheck;
   int i;
 
+  environ  = envp;
+
   if (chdir(svdir) != 0) {
-    fatal("unable to change directory to ", svdir);
+    log_error("runsvdir", "unable to change directory to ", svdir);
+    _exit(100);
   }
 
   sig_catch(SIGTERM, s_term);
   sig_catch(SIGHUP, s_hangup);
-  if ((curdir =open_read(".")) == -1) 
-    fatal("unable to open current directory", 0);
+
+  if ((curdir = open("." ,O_RDONLY | O_NDELAY)) == -1) {
+    log_error("runsvdir", "unable to open current directory", 0);
+    _exit(100);
+  }
   fcntl(curdir,F_SETFD,1);
 
   taia_now(&stampcheck);
@@ -176,7 +174,7 @@ int main(int argc, char **argv) {
     taia_now(&now);
     if (now.sec.x < (stampcheck.sec.x -3)) {
       /* time warp */
-      warn3x("time warp: resetting time stamp.", 0, 0);
+      log_warn("runsvdir", "time warp", ": resetting time stamp.");
       taia_now(&stampcheck);
       taia_now(&now);
     }
@@ -196,7 +194,7 @@ int main(int argc, char **argv) {
             runsvdir();
         }
       } else {
-        warn("unable to stat ", svdir);
+        log_warn("runsvdir", "unable to stat ", svdir);
       }
     }
 
