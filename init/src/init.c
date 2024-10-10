@@ -78,7 +78,8 @@ void shutdown(char *mode) {
 
     int fd = creat(flagname, 0600);
     if (fd < 0 ) {
-      strerr_warn4(FATAL, "unable to create " , flagname, "\n", 0);
+      log_error(LOG_PREFIX, "unable to create " , flagname);
+      _exit(1);
     } else {
       close(fd);
       kill(1, SIGCONT);
@@ -97,6 +98,7 @@ int main(int argc, char *argv[], char * const *envp) {
   char ch;
   int ttyfd;
   char *progname = argv[0];
+  char *flagname = HALT;
   int reboot_mode = 0;
 
   if (getpid() != 1) {
