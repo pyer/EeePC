@@ -10,14 +10,14 @@ default:
 
 ####################
 clean:
-	cd init/src; make clean
+	make -C init/src clean
 
 cleaner: clean
-	cd init/src; make cleaner
+	make -C init/src cleaner
 
 ####################
 compile:
-	cd init/src; make
+	make -C init/src all
 
 ####################
 install-init:

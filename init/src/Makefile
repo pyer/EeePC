@@ -5,7 +5,8 @@ OPTIONS=-O2 -Wall -c
 
 ####################
 
-default: init runsv runsvdir utmpset
+default: all
+all: init runsv runsvdir utmpset
 
 ####################
 
