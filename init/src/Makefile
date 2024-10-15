@@ -43,14 +43,6 @@ runsvdir.o: runsvdir.c
 utmpset.o: utmpset.c
 	gcc $(OPTIONS) -o $@ $<
 
-
-pmatch.o: pmatch.c
-	gcc $(OPTIONS) -o $@ $<
-
-fmt_ptime.o: fmt_ptime.c
-	gcc $(OPTIONS) -o $@ $<
-
-
 ####################
 
 iopause.o: iopause.c iopause.h tai.h taia.h uint64.h
