@@ -6,7 +6,7 @@ OPTIONS=-O2 -Wall -c
 ####################
 
 default: all
-all: init runsv runsvdir utmpset
+all: init runsv runsvdir utmpset logon
 
 ####################
 
@@ -26,6 +26,9 @@ runsvdir: runsvdir.o log.a sig.a str.a time.a wait.a
 utmpset: utmpset.o log.a str.a
 	gcc -s -o $@ $^
 
+logon: logon.o
+	gcc -s -o $@ $^
+
 ####################
 #%.o: %.c
 #	gcc $(OPTIONS) -o $@ $<
@@ -41,6 +44,9 @@ runsvdir.o: runsvdir.c
 	gcc $(OPTIONS) -o $@ $<
 
 utmpset.o: utmpset.c
+	gcc $(OPTIONS) -o $@ $<
+
+logon.o: logon.c
 	gcc $(OPTIONS) -o $@ $<
 
 ####################
