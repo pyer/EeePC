@@ -174,4 +174,4 @@ clean:
 	rm -f *~
 
 cleaner: clean
-	rm -f init runsv runsvdir utmpset
+	rm -f init runsv runsvdir utmpset logon
