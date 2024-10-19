@@ -2,7 +2,7 @@
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 echo 'Waiting for services to stop'
-for script in /etc/svdir/* ; do
+for script in /etc/svdir/enabled/* ; do
   echo -n "d" >$script/supervise/control
 done
 
@@ -10,7 +10,7 @@ WAIT=0
 while [ $WAIT -eq 0 ]
 do
   WAIT=1
-  for script in /etc/svdir/* ; do
+  for script in /etc/svdir/enabled/* ; do
     echo -n "."
     if [ "$(cat $script/supervise/stat)" != "down" ]
     then
