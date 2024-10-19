@@ -23,6 +23,7 @@ compile:
 install-init:
 	sudo rm -f /sbin/init
 	sudo install -m 755 init/src/init     /sbin
+	sudo install -m 755 init/src/logon    /sbin
 	sudo install -m 755 init/src/runsvdir /sbin
 	sudo install -m 755 init/src/runsv    /sbin
 	sudo install -m 755 init/src/utmpset  /sbin

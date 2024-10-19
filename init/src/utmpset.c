@@ -99,11 +99,11 @@ int main (int argc, const char * const *argv, const char * const *envp) {
   }
 
   if (utmp_logout(*argv) == -1) {
-    log_error(UW_TMP_UFILE, "unable to logout line ", *argv);
+//    log_error(UW_TMP_UFILE, "unable to logout line ", *argv);
     _exit(111);
   }
   if (wtmp_logout(*argv) == -1) {
-    log_error(UW_TMP_WFILE, "unable to logout line ", *argv);
+//    log_error(UW_TMP_WFILE, "unable to logout line ", *argv);
     _exit(111);
   }
   _exit(0);

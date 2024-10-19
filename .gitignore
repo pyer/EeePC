@@ -1,5 +1,6 @@
 # Prerequisites
 init/src/init
+init/src/logon
 init/src/runsv
 init/src/runsvdir
 init/src/utmpset

@@ -26,7 +26,7 @@ runsvdir: runsvdir.o log.a sig.a str.a time.a wait.a
 utmpset: utmpset.o log.a str.a
 	gcc -s -o $@ $^
 
-logon: logon.o
+logon: logon.o log.a
 	gcc -s -o $@ $^
 
 ####################
