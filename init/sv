@@ -6,9 +6,9 @@ service=$2
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 check_enabled_service() {
-  if [ ! -d "/etc/svdir/${service}/supervise" ]
+  if [ ! -d "/etc/svdir/enabled/${service}/supervise" ]
   then
-    if [ -d "/etc/svdir.d/${service}" ]
+    if [ -d "/etc/svdir/available/${service}" ]
     then
       echo "ERROR: service ${service} is disabled"
     else
@@ -19,12 +19,12 @@ check_enabled_service() {
 }
 
 check_disabled_service() {
-  if [ -d "/etc/svdir/${service}/supervise" ]
+  if [ -d "/etc/svdir/enabled/${service}/supervise" ]
   then
     echo "ERROR: service ${service} is already enabled"
     exit 1
   fi
-  if [ ! -d "/etc/svdir.d/${service}" ]
+  if [ ! -d "/etc/svdir/available/${service}" ]
   then
     echo "ERROR: service ${service} not found"
     exit 1
@@ -40,26 +40,35 @@ fi
 case "${action}" in
   up)
     check_enabled_service
-    /usr/bin/printf "u" >/etc/svdir/${service}/supervise/control
-    /usr/bin/cat /etc/svdir/${service}/supervise/stat
+    /usr/bin/printf "u" >/etc/svdir/enabled/${service}/supervise/control
+    /usr/bin/cat /etc/svdir/enabled/${service}/supervise/stat
     ;;
   down)
     check_enabled_service
-    /usr/bin/printf "d" >/etc/svdir/${service}/supervise/control
-    /usr/bin/cat /etc/svdir/${service}/supervise/stat
+    /usr/bin/printf "d" >/etc/svdir/enabled/${service}/supervise/control
+    /usr/bin/cat /etc/svdir/enabled/${service}/supervise/stat
     ;;
   status|st)
-    check_enabled_service
-    /usr/bin/cat /etc/svdir/${service}/supervise/stat
+    if [ -d "/etc/svdir/enabled/${service}/supervise" ]
+    then
+      /usr/bin/cat /etc/svdir/enabled/${service}/supervise/stat
+    else
+      if [ -d "/etc/svdir/available/${service}" ]
+      then
+        echo "disabled"
+      else
+        echo "not found"
+      fi
+    fi
     ;;
   enable)
     check_disabled_service
-    /usr/bin/ln -s /etc/svdir.d/${service} /etc/svdir/${service}
+    /usr/bin/ln -s /etc/svdir/available/${service} /etc/svdir/enabled/${service}
     ;;
   disable)
     check_enabled_service
-    /usr/bin/printf "d" >/etc/svdir/${service}/supervise/control
-    /usr/bin/rm -rf /etc/svdir/${service}
+    /usr/bin/printf "d" >/etc/svdir/enabled/${service}/supervise/control
+    /usr/bin/rm -rf /etc/svdir/enabled/${service}
     ;;
   *)
     echo "Usage: sv <down | up | status | enable | disable> service"

@@ -35,11 +35,12 @@ install-init:
 
 install-svdir:
 	sudo cp -r init/etc/* /etc/
-	sudo mkdir -p /etc/svdir
-	sudo ln -s /etc/svdir.d/udevd /etc/svdir/udevd
-	sudo ln -s /etc/svdir.d/tty1  /etc/svdir/tty1
-	sudo ln -s /etc/svdir.d/tty2  /etc/svdir/tty2
-	sudo ln -s /etc/svdir.d/tty3  /etc/svdir/tty3
-	sudo ln -s /etc/svdir.d/tty4  /etc/svdir/tty4
+	sudo mkdir -p /etc/svdir/enabled
+	sudo ln -s /etc/svdir/available/udevd /etc/svdir/enabled/ntpd
+	sudo ln -s /etc/svdir/available/tty1  /etc/svdir/enabled/tty1
+	sudo ln -s /etc/svdir/available/tty2  /etc/svdir/enabled/tty2
+	sudo ln -s /etc/svdir/available/tty3  /etc/svdir/enabled/tty3
+	sudo ln -s /etc/svdir/available/tty4  /etc/svdir/enabled/tty4
+	sudo ln -s /etc/svdir/available/udevd /etc/svdir/enabled/udevd
 
 ####################

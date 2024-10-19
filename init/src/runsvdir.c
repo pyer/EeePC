@@ -15,7 +15,7 @@
 
 #define MAXSERVICES 1000
 
-char *svdir = "/etc/svdir";
+char *svdir = "/etc/svdir/enabled";
 char * const *environ;
 
 unsigned long dev =0;
@@ -65,7 +65,7 @@ void runsvdir() {
   int i;
   struct stat s;
 
-  if (! (dir =opendir("."))) {
+  if (! (dir = opendir("."))) {
     log_warn("runsvdir", "unable to open directory ", svdir);
     return;
   }
