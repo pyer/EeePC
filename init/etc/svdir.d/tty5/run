@@ -1,11 +1,11 @@
 #!/bin/sh -euC
 
-# Disable service, if /dev/tty{N} does not exist. See #914788.
-if ! test -c /dev/tty5 ; then
-	rm -rf /etc/svdir/tty5
+# Disable service if /dev/tty{N} does not exist.
+if ! test -c /dev/tty5
+then
+	/sbin/sv disable tty5
 	exit 0
 fi
 
-pgrep -x getty  -t tty5 && exit 163
-pgrep -x agetty -t tty5 && exit 163
-exec setsid getty 38400 tty5 linux
+# Log on /dev/tty{N}
+exec setsid /sbin/logon /dev/tty5
