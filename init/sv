@@ -5,7 +5,16 @@ service=$2
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
+check_service() {
+  if [ -z ${service} ]
+  then
+    echo "ERROR: service undefined"
+    exit 1
+  fi
+}
+
 check_enabled_service() {
+  check_service
   if [ ! -d "/etc/svdir/enabled/${service}/supervise" ]
   then
     if [ -d "/etc/svdir/available/${service}" ]
@@ -17,12 +26,6 @@ check_enabled_service() {
     exit 1
   fi
 }
-
-if [ -z ${service} ]
-then
-  echo "ERROR: service undefined"
-  action="usage"
-fi
 
 case "${action}" in
   up)
@@ -36,6 +39,7 @@ case "${action}" in
     /usr/bin/cat /etc/svdir/enabled/${service}/supervise/stat
     ;;
   status|st)
+    check_service
     if [ -d "/etc/svdir/enabled/${service}/supervise" ]
     then
       /usr/bin/cat /etc/svdir/enabled/${service}/supervise/stat
@@ -49,6 +53,7 @@ case "${action}" in
     fi
     ;;
   enable)
+    check_service
     if [ ! -d "/etc/svdir/enabled/${service}/supervise" ]
     then
       if [ ! -d "/etc/svdir/available/${service}" ]
@@ -64,7 +69,11 @@ case "${action}" in
     /usr/bin/printf "d" >/etc/svdir/enabled/${service}/supervise/control
     /usr/bin/rm -rf /etc/svdir/enabled/${service}
     ;;
+  list)
+    ls -1 /etc/svdir/enabled | sort
+    ;;
   *)
     echo "Usage: sv <down | up | status | enable | disable> service"
+    echo "   or: sv list"
     ;;
 esac
