@@ -10,6 +10,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <termios.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -109,6 +110,7 @@ static void get_logname(char *logname)
   char *bp = logname;
   unsigned char c = 1;
 
+  tcflush(0, TCIFLUSH);    /* flush pending input */
   while (c != 0 ) {
     if (read (0, &c, 1) < 1) {
         if (errno == EINTR || errno == EIO || errno == ENOENT)
