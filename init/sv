@@ -18,19 +18,6 @@ check_enabled_service() {
   fi
 }
 
-check_disabled_service() {
-  if [ -d "/etc/svdir/enabled/${service}/supervise" ]
-  then
-    echo "ERROR: service ${service} is already enabled"
-    exit 1
-  fi
-  if [ ! -d "/etc/svdir/available/${service}" ]
-  then
-    echo "ERROR: service ${service} not found"
-    exit 1
-  fi
-}
-
 if [ -z ${service} ]
 then
   echo "ERROR: service undefined"
@@ -62,8 +49,15 @@ case "${action}" in
     fi
     ;;
   enable)
-    check_disabled_service
-    /usr/bin/ln -s /etc/svdir/available/${service} /etc/svdir/enabled/${service}
+    if [ ! -d "/etc/svdir/enabled/${service}/supervise" ]
+    then
+      if [ ! -d "/etc/svdir/available/${service}" ]
+      then
+        echo "ERROR: service ${service} not found"
+        exit 1
+      fi
+      /usr/bin/ln -s /etc/svdir/available/${service} /etc/svdir/enabled/${service}
+    fi
     ;;
   disable)
     check_enabled_service
