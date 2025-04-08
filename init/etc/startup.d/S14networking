@@ -1,5 +1,4 @@
 #!/bin/sh -e
-
 PATH="/sbin:/bin"
 
 [ -x /sbin/ifup ] || exit 0
@@ -18,7 +17,6 @@ then
 fi
 
 echo "Configuring network interfaces"
-set -- $EXCLUDE_INTERFACES
 exclusions=""
 for iface in $EXCLUDE_INTERFACES
 do
@@ -29,39 +27,20 @@ echo "Excluding: $exclusions"
 verbose=""
 [ "$VERBOSE" = yes ] && verbose=-v
 
-echo "Check ifstate"
-RUN_DIR="/run/network"
-IFSTATE="$RUN_DIR/ifstate"
-if [ ! -d "$RUN_DIR" ] ; then
-  if ! mkdir -p "$RUN_DIR" ; then
-      echo "can't create $RUN_DIR"
-      exit 1
-  fi
-  if ! chown root:netdev "$RUN_DIR" ; then
-      echo "can't chown $RUN_DIR"
-  fi
-fi
-if [ ! -r "$IFSTATE" ] ; then
-  if ! :> "$IFSTATE" ; then
-      echo "can't initialise $IFSTATE"
-      exit 1
-  fi
-fi
-
 if [ -x /bin/udevadm ]; then
   /bin/udevadm settle
 fi
 
-echo "Configuring auto interfaces"
+echo "Configuring auto interfaces:"
 for iface in $(ifquery --list --allow=auto $exclusions)
 do
-  echo "Set network interface $iface up"
+  echo "    - $iface"
   ifup $verbose $iface
 done
 
-echo "Configuring hotplug interfaces"
+echo "Configuring hotplug interfaces:"
 for iface in $(ifquery --list --allow=hotplug $exclusions)
 do
-  echo "Set network interface $iface up"
+  echo "    - $iface"
   ifup $verbose $iface
 done
