@@ -1,0 +1,4 @@
+#!/bin/sh
+[ -x /sbin/resolvconf ] || exit 0
+echo "Stopping resolvconf"
+/sbin/resolvconf --disable-updates || echo "  failed to disable updates"
