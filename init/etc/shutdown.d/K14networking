@@ -1,10 +1,8 @@
 #!/bin/sh -e
 
-PATH="/sbin:/bin"
-
 [ -x /sbin/ifup ] || exit 0
 [ -x /sbin/ifdown ] || exit 0
 
-echo "Deconfiguring network interfaces"
+echo "Set network interfaces down"
 /sbin/ifdown -a --exclude=lo
 

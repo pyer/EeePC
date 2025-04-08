@@ -1,7 +1,5 @@
 #!/bin/sh
-
-PATH=/sbin:/usr/sbin:/bin:/usr/bin
-
+PATH=/sbin:/bin
 echo 'Unmounting network shares...'
 sync
 umount -a -r -t nfs,nfs4,cifs

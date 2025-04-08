@@ -7,6 +7,7 @@ default:
 	@echo "  make compile"
 	@echo "  make install-init"
 	@echo "  make install-svdir"
+	@echo "  make networking"
 
 ####################
 clean:
@@ -42,5 +43,8 @@ install-svdir:
 	sudo sv enable tty3
 	sudo sv enable tty4
 	sudo sv enable udevd
+
+networking:
+	sudo cp -r networking/etc/* /etc/
 
 ####################

@@ -1,8 +1,6 @@
 #! /bin/sh
-
 PATH=/sbin:/bin
-
-echo "Sync ..."
+echo 'Unmounting all volumes...'
 sync
 
 # Deactivate swap
