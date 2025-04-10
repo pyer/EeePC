@@ -15,6 +15,6 @@ iface eth0 inet static
 # The wifi network interface
 allow-hotplug wlan0
 iface wlan0 inet dhcp
-    wpa-ssid SFR_BB5F
+    wpa-ssid "***"
     wpa-psk "********"
     gateway 192.168.1.1
