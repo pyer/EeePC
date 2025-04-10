@@ -5,9 +5,9 @@ default:
 	@echo "  make clean"
 	@echo "  make cleaner"
 	@echo "  make compile"
+	@echo "  make install-etc"
 	@echo "  make install-init"
 	@echo "  make install-svdir"
-	@echo "  make networking"
 
 ####################
 clean:
@@ -21,6 +21,9 @@ compile:
 	make -C init/src all
 
 ####################
+install-etc:
+	sudo cp -r etc/* /etc/
+
 install-init:
 	sudo rm -f /sbin/init
 	sudo install -m 755 init/src/init     /sbin
@@ -44,8 +47,5 @@ install-svdir:
 	sudo sv enable tty2
 	sudo sv enable tty3
 	sudo sv enable tty4
-
-networking:
-	sudo cp -r networking/etc/* /etc/
 
 ####################
