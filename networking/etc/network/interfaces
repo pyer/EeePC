@@ -2,7 +2,6 @@
 # /etc/network/interfaces
 #
 # interfaces(5) file used by ifup(8) and ifdown(8)
-# Used by ceni but not by connman
 #------------------------------------------------------------------------------
 
 auto lo
@@ -12,7 +11,6 @@ iface lo inet loopback
 allow-hotplug eth0
 iface eth0 inet static
     address 192.168.2.1/24
-    dns-nameservers 8.8.8.8 8.8.4.4
 
 # The wifi network interface
 allow-hotplug wlan0

@@ -52,13 +52,4 @@ for mountpt in $waitnfs; do
         break
       fi
     done
-
 done
-
-echo "Cleaning up temporary files..."
-find /tmp/ ! -type d -delete
-find /tmp/ -type d -empty -delete
-find /run/ ! -xtype d ! -name utmp -delete
-find /run/lock/ ! -type d -delete
-find /run/shm/  ! -type d -delete
-
