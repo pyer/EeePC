@@ -37,12 +37,13 @@ install-init:
 install-svdir:
 	sudo cp -r init/etc/* /etc/
 	sudo mkdir -p /etc/svdir/enabled
+	sudo sv enable dhcpd
 	sudo sv enable ntpd
+	sudo sv enable sshd
 	sudo sv enable tty1
 	sudo sv enable tty2
 	sudo sv enable tty3
 	sudo sv enable tty4
-	sudo sv enable udevd
 
 networking:
 	sudo cp -r networking/etc/* /etc/
