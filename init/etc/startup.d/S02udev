@@ -94,7 +94,7 @@ make_static_nodes
 # clean up parts of the database created by the initramfs udev
 udevadm info --cleanup-db
 
-echo "Starting hot-plug events dispatcher $NAME"
+echo "Starting hot-plug events dispatcher: $NAME"
 start-stop-daemon --start --name $NAME --user root --quiet --pidfile $PIDFILE --exec $DAEMON --background --make-pidfile
 
 echo "Synthesizing the initial hotplug events (subsystems)"
