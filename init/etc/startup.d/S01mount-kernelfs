@@ -1,53 +1,36 @@
 #! /bin/sh
-
 PATH=/sbin:/bin
-. /lib/init/vars.sh
-. /lib/init/tmpfs.sh
-
-. /lib/lsb/init-functions
-. /lib/init/mount-functions.sh
-
 # $1: Mount mode, to allow for remounting
 MNTMODE="mount_noupdate"
 [ "$1" = "reload" ] && MNTMODE="remount"
 
-# Mount tmpfs on /run and/or /run/lock
-mount_run "$MNTMODE"
-mount_lock "$MNTMODE"
+. /etc/mount-functions.sh
 
+# Mount tmpfs on /run and/or /run/lock
+mount_run  "$MNTMODE"
+mount_lock "$MNTMODE"
 
 # Mount proc filesystem on /proc
 domount "$MNTMODE" proc "" /proc proc "-onodev,noexec,nosuid"
-
-if grep -E -qs "securityfs\$" /proc/filesystems ; then
-	domount "$MNTMODE" securityfs "" /sys/kernel/security securityfs
-fi
-
-# Mount sysfs on /sys
-# Only mount sysfs if it is supported (kernel >= 2.6)
-if grep -E -qs "sysfs\$" /proc/filesystems
-then
-	domount "$MNTMODE" sysfs "" /sys sysfs "-onodev,noexec,nosuid"
-fi
+domount "$MNTMODE" securityfs "" /sys/kernel/security securityfs
+domount "$MNTMODE" sysfs "" /sys sysfs "-onodev,noexec,nosuid"
 
 if [ -d /sys/fs/pstore ]
 then
-	domount "$MNTMODE" pstore "" /sys/fs/pstore pstore ""
+  domount "$MNTMODE" pstore "" /sys/fs/pstore pstore ""
 fi
 
 # Mount efivarfs on /sys/firmware/efi/efivars if necessary
 if [ -x /sys/firmware/efi ] && ! grep -sq ^efivarfs /proc/self/mounts; then
-	# check efivarfs already mounted by kernel
-	if ls /sys/firmware/efi/efivars/* 1>/dev/null 2>&1 || \
-		ls /sys/firmware/efi/vars/* 1>/dev/null 2>&1; then
-		return
-	fi
-	efivarsmnt=/sys/firmware/efi/efivars
-	if [ -d $efivarsmnt ]; then
-		# mount following mxlinux's efimount
-		[ "$VERBOSE" != no ] && log_action_begin_msg "Mounting efivarfs to $efivarsmnt"
-		mount -t efivarfs  efivarfs $efivarsmnt
-		RET=$?
-		[ "$VERBOSE" != no ] && log_action_end_msg $RET
-	fi
+  # check efivarfs already mounted by kernel
+  if ls /sys/firmware/efi/efivars/* 1>/dev/null 2>&1 || \
+     ls /sys/firmware/efi/vars/* 1>/dev/null 2>&1; then
+    return
+  fi
+  efivarsmnt=/sys/firmware/efi/efivars
+  if [ -d $efivarsmnt ]; then
+    # mount following mxlinux's efimount
+    echo "Mounting efivarfs to $efivarsmnt"
+    mount -t efivarfs efivarfs $efivarsmnt
+  fi
 fi
