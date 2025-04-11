@@ -129,8 +129,8 @@ _read_fstab_entry () {
   echo "MNT_FREQ="
   echo "MNT_PASS="
 
-  fstab_files | while read file; do
-    if [ -f "$file" ]; then
+  file="/etc/fstab"
+  if [ -f "$file" ]; then
       while read MNT_FSNAME MNT_DIR MNT_TYPE MNT_OPTS MNT_FREQ MNT_PASS MNT_JUNK; do
         case "$MNT_FSNAME" in
           ""|\#*)
@@ -151,8 +151,7 @@ _read_fstab_entry () {
         fi
         MNT_DIR=""
       done < "$file"
-    fi
-  done
+  fi
 }
 
 # Find a specific fstab entry
