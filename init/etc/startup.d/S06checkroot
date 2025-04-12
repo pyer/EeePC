@@ -3,22 +3,7 @@
 PATH=/usr/bin:/sbin:/bin
 FSCK_LOGFILE=/var/log/fsck/checkroot
 
-[ "$FSCKFIX" ] || FSCKFIX=no
-#. /lib/init/vars.sh
-#. /lib/lsb/init-functions
-#. /lib/init/mount-functions.sh
 . /etc/mount-functions.sh
-
-single_user_shell () {
-  if ! sulogin --force $CONSOLE
-  then
-    echo "ERROR: Attempt to start maintenance shell failed." 
-    echo "Will restart in 5 seconds."
-    sleep 5
-  fi
-  echo "Will now restart"
-  reboot -f
-}
 
 # Trap SIGINT so that we can handle user interrupt of fsck.
 trap "" INT
@@ -29,138 +14,50 @@ read_fstab
 # If not we try to use the /dev/root alias device, and if that
 # fails we create a temporary node in /run.
 #
-if [ "$rootcheck" = yes ]
+ddev="$(mountpoint -qx $rootdev)"
+rdev="$(mountpoint -d /)"
+if [ "$ddev" != "$rdev" ] && [ "$ddev" != "4:0" ]
 then
-  ddev="$(mountpoint -qx $rootdev)"
-  rdev="$(mountpoint -d /)"
-  if [ "$ddev" != "$rdev" ] && [ "$ddev" != "4:0" ]
-  then
       if rm -f /run/rootdev \
           && mknod -m 600 /run/rootdev b ${rdev%:*} ${rdev#*:} \
           && [ -e /run/rootdev ]
       then
         rootdev=/run/rootdev
       else
-        rootfatal=yes
-      fi
-  fi
-fi
-
-#
-# Bother, said Pooh.
-#
-if [ "$rootfatal" = yes ]
-then
-  echo "ERROR: The device node $rootdev for the root filesystem is missing or incorrect 
+        echo "ERROR: The device node $rootdev for the root filesystem is missing or incorrect 
 or there is no entry for the root filesystem listed in /etc/fstab. 
 The system is also unable to create a temporary node in /run. 
 This means you have to fix the problem manually."
-  echo "A maintenance shell will now be started. 
-CONTROL-D will terminate this shell and restart the system."
-  # Start a single user shell on the console
-  single_user_shell
+        halt
+      fi
 fi
 
-# See if we want to check the root file system.
 #
-FSCKCODE=0
-
-if [ -e /run/initramfs/fsck-root ]
-then
-  rootcheck=no
-fi
-
-if [ "$rootcheck" = yes ]
-then
-  #
-  # Ensure that root is quiescent and read-only before fsck'ing.
-  #
-  # mount -n -o remount,ro / would be the correct syntax but
-  # mount can get confused when there is a "bind" mount defined
-  # in fstab that bind-mounts "/" somewhere else.
-  #
-  # So we use mount -n -o remount,ro $rootdev / but that can
-  # fail on older kernels on sparc64/alpha architectures due
-  # to a bug in sys_mount().
-  #
-  # As a compromise we try both.
-  #
-  if \
+# Ensure that root is quiescent and read-only before fsck'ing.
+#
+# mount -n -o remount,ro / would be the correct syntax but
+# mount can get confused when there is a "bind" mount defined
+# in fstab that bind-mounts "/" somewhere else.
+#
+# So we use mount -n -o remount,ro $rootdev / but that can
+# fail on older kernels on sparc64/alpha architectures due
+# to a bug in sys_mount().
+#
+# As a compromise we try both.
+#
+if \
     ! mount    -n -o remount,ro              $rootdev /              \
     && ! mount -n -o remount,ro -t dummytype $rootdev /  2>/dev/null \
     && ! mount -n -o remount,ro                       /  2>/dev/null
-  then
+then
     echo "ERROR: Cannot check root file system because it is not mounted read-only."
-    rootcheck=no
-  fi
-fi
-
-#
-# The actual checking is done here.
-#
-if [ "$rootcheck" = yes ]
-then
-  force=""
-  case "$(findmnt -n -o FSTYPE /)" in
-    # Only ext* file systems support `-f' option to fsck. See #686895
-    (ext*)
-      [ -f /forcefsck ] || grep -q -s -w -i "forcefsck" /proc/cmdline && force="-f" ;;
-  esac
-
-  if [ "$FSCKFIX" = yes ]
-  then
-    fix="-y"
-  else
-    fix="-a"
-  fi
-
-  spinner="-C"
-  case "$TERM" in
-    dumb|network|unknown|"")
-    spinner="" ;;
-  esac
-  
+else
+  # The actual checking is done here.
+  # Only ext* file systems support `-f' option to fsck. See #686895
   echo "Checking root file system"
-  fsck $spinner $force $fix -T -t $roottype $rootdev
-  FSCKCODE=$?
-  echo "code $FSCKCODE"
+  fsck -C -p -T -t $roottype $rootdev
+  echo "Status: $?"
 fi
-
-#
-# If there was a failure, drop into single-user mode.
-#
-# NOTE: "failure" is defined as exiting with a return code of
-# 4 or larger. A return code of 1 indicates that file system
-# errors were corrected but that the boot may proceed. A return
-# code of 2 or 3 indicates that the system should immediately reboot.
-#
-if [ "$FSCKCODE" -eq 32 ]
-then
-  echo "File system check was interrupted by user"
-elif [ "$FSCKCODE" -gt 3 ]
-then
-  # Surprise! Re-directing from a HERE document (as in "cat << EOF")
-  # does not work because the root is currently read-only.
-  echo "ERROR: An automatic file system check (fsck) of the root filesystem failed. 
-A manual fsck must be performed, then the system restarted. 
-The fsck should be performed in maintenance mode with the 
-root filesystem mounted in read-only mode."
-  echo "The root filesystem is currently mounted in read-only mode. 
-A maintenance shell will now be started. 
-After performing system maintenance, press CONTROL-D 
-to terminate the maintenance shell and restart the system."
-  # Start a single user shell on the console
-  single_user_shell
-elif [ "$FSCKCODE" -gt 1 ]
-then
-  echo "ERROR: The file system check corrected errors on the root partition 
-but requested that the system be restarted."
-  echo "The system will be restarted in 5 seconds."
-  sleep 5
-  echo "Will now restart"
-  reboot -f
-fi
-
 #
 # Remount root to final mode (rw or ro).
 #
