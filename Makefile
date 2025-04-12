@@ -17,10 +17,7 @@ compile:
 	make -C init/src all
 
 ####################
-install-etc:
-	sudo cp -r etc/* /etc/
-
-install-init:
+install:
 	sudo rm -f /sbin/init
 	sudo install -m 755 init/src/init     /sbin
 	sudo install -m 755 init/src/logon    /sbin
@@ -33,7 +30,7 @@ install-init:
 	sudo ln -s /sbin/init /sbin/poweroff
 	sudo ln -s /sbin/init /sbin/reboot
 
-install-scripts:
+scripts:
 	sudo cp -r init/etc/* /etc/
 	sudo mkdir -p /etc/svdir/enabled
 	sudo sv enable dhcpd
@@ -43,5 +40,8 @@ install-scripts:
 	sudo sv enable tty2
 	sudo sv enable tty3
 	sudo sv enable tty4
+
+config:
+	sudo cp -r etc/* /etc/
 
 ####################
