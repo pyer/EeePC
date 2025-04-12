@@ -1,13 +1,9 @@
 #
 ####################
-default:
+help:
 	@echo "Usage:"
-	@echo "  make clean"
-	@echo "  make cleaner"
-	@echo "  make compile"
-	@echo "  make install-etc"
-	@echo "  make install-init"
-	@echo "  make install-svdir"
+	@grep -E "^[a-z].*" Makefile | sed -e "s/^\(.*\):.*/  make \1/g"
+#	@echo "$(grep -E '^[a-z].*' Makefile | sed -e 's/:.*//g' -e 's/\(.*\)/make \1/g')"
 
 ####################
 clean:
@@ -37,7 +33,7 @@ install-init:
 	sudo ln -s /sbin/init /sbin/poweroff
 	sudo ln -s /sbin/init /sbin/reboot
 
-install-svdir:
+install-scripts:
 	sudo cp -r init/etc/* /etc/
 	sudo mkdir -p /etc/svdir/enabled
 	sudo sv enable dhcpd
