@@ -1,5 +1,5 @@
 #! /bin/sh
-PATH="/sbin:/bin"
+PATH=/sbin:/bin
 
 # Read through fstab line by line. If it is NFS, set the flag
 # for mounting NFS file systems. If any NFS partition is found

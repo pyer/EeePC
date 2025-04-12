@@ -20,6 +20,31 @@ fi
 	fi
 	mount -a -t nonfs,nfs4,smbfs,cifs,ncp,ncpfs,coda,ocfs2,gfs,gfs2,ceph -O no_netdev
 
+	# /var/run and /var/lock are now /run and /run/lock,
+	# respectively.  Cope with filesystems being deliberately
+	# mounted on /var/run and /var/lock.  We will create bind
+	# mounts from /run and /run/lock to /var/run and /var/lock if
+	# we can't remove the /var/run and /var/lock directories, or
+	# else simply create symlinks.  For example, in the case that
+	# the user has explicitly mounted filesystems on /var/run or
+	# /var/lock, we bind mount over the top of them.  Where no
+	# filesystems are mounted, we replace the directory with a
+	# symlink where possible.
+
+	# Cater for systems which have a symlink from /run to /var/run
+	# for whatever reason.  Remove the symlink and replace with a
+	# directory.  The migration logic will then take care of the
+	# rest.  Note that it will take a second boot to fully
+	# migrate; it should only ever be needed on broken systems.
+  ln -s /run /var/run
+  ln -s /run/lock /var/lock
+  ln -s /dev/shm /run/shm
+
+	# Instances of savelog(8), started from {checkroot} and {checkfs} will
+	# wait for /var/log/fsck to appear to write logs there. If /var/log is
+	# tmpfs, we have to make /var/log/fsck appear here. (see #524007)
+	mkdir -p /var/log/fsck
+
 	# Remount tmpfs filesystems; with increased VM after swapon,
 	# the size limits may be adjusted.
 	mount_run  mount_noupdate
@@ -30,9 +55,4 @@ fi
 	# mount a tmpfs on /tmp.  We can now also determine swap size
 	# to factor this into our size limit.
 	mount_tmp mount_noupdate
-
-	# Instances of savelog(8), started from {checkroot} and {checkfs} will
-	# wait for /var/log/fsck to appear to write logs there. If /var/log is
-	# tmpfs, we have to make /var/log/fsck appear here. (see #524007)
-	mkdir -p /var/log/fsck
 

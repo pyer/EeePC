@@ -1,55 +1,12 @@
 #! /bin/sh
-
-# Include /usr/bin in path to find on_ac_power if /usr/ is on the root
-# partition.
+# Include /usr/bin in path to find on_ac_power if /usr/ is on the root partition.
 PATH=/usr/bin:/sbin:/bin
 FSCK_LOGFILE=/var/log/fsck/checkfs
 
-. /etc/mount-functions.sh
+# Trap SIGINT so that we can handle user interupt of fsck.
+trap "" INT
 
-	# Trap SIGINT so that we can handle user interupt of fsck.
-	trap "" INT
-
-	#
-	# Check the rest of the file systems.
-	#
-	if [ "$FSCKTYPES" != "none" ]
-	then
-		if [ -f /forcefsck ] || grep -q -s -w -i "forcefsck" /proc/cmdline
-		then
-			force="-f"
-		else
-			force=""
-		fi
-		if [ "$FSCKFIX" = yes ]
-		then
-			fix="-y"
-		else
-			fix="-a"
-		fi
-		spinner="-C"
-		case "$TERM" in
-		  dumb|network|unknown|"")
-			spinner=""
-			;;
-		esac
-		FSCKTYPES_OPT=""
-		[ "$FSCKTYPES" ] && FSCKTYPES_OPT="-t $FSCKTYPES"
-
-		echo "Checking file systems"
-		echo "fsck $spinner -T -M -A $fix $force $FSCKTYPES_OPT"
-		fsck $spinner -T -M -A $fix $force $FSCKTYPES_OPT
-		FSCKCODE=$?
-		if [ "$FSCKCODE" -eq 32 ]
-		then
-				echo "code $FSCKCODE"
-				echo "File system check was interrupted by user"
-		elif [ "$FSCKCODE" -gt 1 ]
-		then
-			echo "code $FSCKCODE"
-		  echo "ERROR: File system check failed. 
-A log is being saved in ${FSCK_LOGFILE} if that location is writable. 
-Please repair the file system manually."
-		fi
-	fi
-	rm -f /fastboot /forcefsck 2>/dev/null
+# Check the rest of the file systems.
+echo "Checking file systems"
+fsck -C -T -M -A -p
+echo "Status: $?"

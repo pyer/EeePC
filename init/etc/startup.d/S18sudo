@@ -1,4 +1,3 @@
-
 #!/bin/sh
 # make sure privileges don't persist across reboots
 # if the /run/sudo directory doesn't exist, let's create it with the

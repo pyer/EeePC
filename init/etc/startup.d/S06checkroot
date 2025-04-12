@@ -1,9 +1,8 @@
-#! /bin/sh
-
-# Include /usr/bin in path to find on_ac_power if /usr/ is on the root
-# partition.
+#!/bin/sh
+# Include /usr/bin in path to find on_ac_power if /usr/ is on the root partition.
 PATH=/usr/bin:/sbin:/bin
 FSCK_LOGFILE=/var/log/fsck/checkroot
+
 [ "$FSCKFIX" ] || FSCKFIX=no
 #. /lib/init/vars.sh
 #. /lib/lsb/init-functions

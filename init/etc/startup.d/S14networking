@@ -1,5 +1,5 @@
 #!/bin/sh -e
-PATH="/sbin:/bin"
+PATH=/sbin:/bin
 
 [ -x /sbin/ifup ] || exit 0
 [ -x /sbin/ifdown ] || exit 0
@@ -20,9 +20,9 @@ echo "Configuring network interfaces"
 exclusions=""
 for iface in $EXCLUDE_INTERFACES
 do
+  echo "Excluding $iface"
   exclusions="-X $iface $exclusions"
 done
-echo "Excluding: $exclusions"
 
 verbose=""
 [ "$VERBOSE" = yes ] && verbose=-v
@@ -31,16 +31,14 @@ if [ -x /bin/udevadm ]; then
   /bin/udevadm settle
 fi
 
-echo "Configuring auto interfaces:"
+echo "Configuring auto interfaces"
 for iface in $(ifquery --list --allow=auto $exclusions)
 do
-  echo "    - $iface"
   ifup $verbose $iface
 done
 
-echo "Configuring hotplug interfaces:"
+echo "Configuring hotplug interfaces"
 for iface in $(ifquery --list --allow=hotplug $exclusions)
 do
-  echo "    - $iface"
   ifup $verbose $iface
 done
