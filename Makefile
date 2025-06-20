@@ -1,4 +1,6 @@
 #
+.PHONY: clean cron init
+
 ####################
 help:
 	@echo "Usage:"
@@ -7,18 +9,35 @@ help:
 
 ####################
 clean:
+	make -C cron/src clean
 	make -C init/src clean
 	find ./ -name "*~" -delete
 
-cleaner: clean
-	make -C init/src cleaner
+####################
+#build:
+#	@echo "Build $(lastword $(MAKECMDGOALS))"
+
+uninstall_packages:
+	sudo dpkg --purge logrotate
+	sudo dpkg --purge anacron
+	sudo dpkg --purge cron
+	sudo dpkg --purge cron-daemon-common
 
 ####################
-compile:
+cron:
+	make -C cron/src
+
+install_cron:
+	sudo install -m  755 -s cron/src/cron    /sbin/
+	sudo cp cron/man/bitstring.3 /usr/share/man/man3/
+	sudo cp cron/man/cron.8      /usr/share/man/man8/
+	sudo cp cron/man/crontab.5   /usr/share/man/man5/
+
+####################
+init:
 	make -C init/src all
 
-####################
-install:
+install_init:
 	sudo rm -f /sbin/init
 	sudo install -m 755 init/src/init     /sbin
 	sudo install -m 755 init/src/logon    /sbin
@@ -31,7 +50,7 @@ install:
 	sudo ln -s /sbin/init /sbin/poweroff
 	sudo ln -s /sbin/init /sbin/reboot
 
-scripts:
+install_services:
 	sudo cp -r init/etc/* /etc/
 	sudo mkdir -p /etc/svdir/enabled
 	sudo sv enable dhcpd
@@ -42,7 +61,7 @@ scripts:
 	sudo sv enable tty3
 	sudo sv enable tty4
 
-config:
+install_etc:
 	sudo cp -r etc/* /etc/
 
 ####################

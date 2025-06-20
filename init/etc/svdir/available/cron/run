@@ -2,7 +2,7 @@
 set -e
 
 NAME="cron"
-DAEMON=/usr/sbin/cron
+DAEMON=/sbin/cron
 
 # Exit service if DAEMON is not installed
 if [ ! -x $DAEMON ]; then
