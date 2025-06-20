@@ -8,6 +8,7 @@ help:
 ####################
 clean:
 	make -C init/src clean
+	find ./ -name "*~" -delete
 
 cleaner: clean
 	make -C init/src cleaner
