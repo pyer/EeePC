@@ -7,5 +7,5 @@ then
 	exit 0
 fi
 
-# Log on /dev/tty{N}
-exec setsid /sbin/logon /dev/tty5
+# Log on /dev/tty{N}, automatic
+exec setsid /sbin/logon /dev/tty5 pierre

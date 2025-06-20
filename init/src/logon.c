@@ -136,19 +136,24 @@ int main (int argc, char **argv)
 {
   char logname[42];
 
-  if (argc != 2) {
+  /* argv[1] is the tty name */
+  if (argc == 3) {
+    open_tty(argv[1]);
+    /* Automatic login: argv[2] is the user name */
+    execl(loginprog, loginprog, "-f", argv[2], NULL);
+  } else if (argc == 2) {
+    open_tty(argv[1]);
+    show_issue();
+    *logname = 0;
+    while (*logname == 0) {
+      show_prompt();
+      get_logname(logname);
+    }
+    execl(loginprog, loginprog, "--", logname, NULL);
+  } else {
     log_error(LOG_PREFIX, "Usage: logon <tty name>", "");
     return 111;
   }
-
-  open_tty(argv[1]);
-  show_issue();
-  *logname = 0;
-  while (*logname == 0) {
-    show_prompt();
-    get_logname(logname);
-  }
-  execl(loginprog, loginprog, "--", logname, NULL);
   error("cannot execute ", loginprog);
 }
 
