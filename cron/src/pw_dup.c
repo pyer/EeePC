@@ -43,8 +43,6 @@ static char rcsid[] = "$Id: pw_dup.c,v 1.2 2004/01/23 18:56:43 vixie Exp $";
 #include <stdio.h>
 #include <string.h>
 
-#include "config.h"
-
 struct passwd *
 pw_dup(const struct passwd *pw) {
 	char		*cp;
@@ -61,12 +59,6 @@ pw_dup(const struct passwd *pw) {
 		psize = strlen(pw->pw_passwd) + 1;
 		total += psize;
 	}
-#ifdef LOGIN_CAP
-	if (pw->pw_class) {
-		csize = strlen(pw->pw_class) + 1;
-		total += csize;
-	}
-#endif /* LOGIN_CAP */
 	if (pw->pw_gecos) {
 		gsize = strlen(pw->pw_gecos) + 1;
 		total += gsize;
@@ -99,13 +91,6 @@ pw_dup(const struct passwd *pw) {
 		newpw->pw_passwd = cp;
 		cp += psize;
 	}
-#ifdef LOGIN_CAP
-	if (pw->pw_class) {
-		(void)memcpy(cp, pw->pw_class, csize);
-		newpw->pw_class = cp;
-		cp += csize;
-	}
-#endif /* LOGIN_CAP */
 	if (pw->pw_gecos) {
 		(void)memcpy(cp, pw->pw_gecos, gsize);
 		newpw->pw_gecos = cp;

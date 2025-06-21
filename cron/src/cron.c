@@ -16,10 +16,6 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#if !defined(lint) && !defined(LINT)
-static char rcsid[] = "$Id: cron.c,v 1.12 2004/01/23 18:56:42 vixie Exp $";
-#endif
-
 #define	MAIN_PROGRAM
 
 #include "cron.h"
@@ -34,41 +30,18 @@ static	void	usage(void),
 		sigchld_handler(int),
 		sighup_handler(int),
 		sigchld_reaper(void),
-		quit(int),
-		parse_args(int c, char *v[]);
+		quit(int);
 
 static	volatile sig_atomic_t	got_sighup, got_sigchld;
 static	int			timeRunning, virtualTime, clockTime;
 static	long			GMToff;
 
-static void
-usage(void) {
-	const char **dflags;
-
-	fprintf(stderr, "usage:  %s [-n] [-x [", ProgramName);
-	for (dflags = DebugFlagNames; *dflags; dflags++)
-		fprintf(stderr, "%s%s", *dflags, dflags[1] ? "," : "]");
-	fprintf(stderr, "]\n");
-	exit(ERROR_EXIT);
-}
-
-int
-main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 	struct sigaction sact;
 	cron_db	database;
 	int fd;
 
-	ProgramName = argv[0];
-
 	setlocale(LC_ALL, "");
-
-#if defined(BSD)
-	setlinebuf(stdout);
-	setlinebuf(stderr);
-#endif
-
-	parse_args(argc, argv);
-
 	bzero((char *)&sact, sizeof sact);
 	sigemptyset(&sact.sa_mask);
 	sact.sa_flags = 0;
@@ -85,14 +58,7 @@ main(int argc, char *argv[]) {
 
 	acquire_daemonlock(0);
 	set_cron_uid();
-	set_cron_cwd();
 
-	if (putenv("PATH="_PATH_DEFPATH) < 0) {
-		log_it("CRON", getpid(), "DEATH", "can't malloc");
-		exit(1);
-	}
-
-	acquire_daemonlock(0);
 	database.head = NULL;
 	database.tail = NULL;
 	database.mtim = ts_zero;
@@ -383,41 +349,15 @@ sigchld_reaper(void) {
 		case -1:
 			if (errno == EINTR)
 				continue;
-			Debug(DPROC,
-			      ("[%ld] sigchld...no children\n",
-			       (long)getpid()))
+			Debug(DPROC, ("[%ld] sigchld...no children\n", (long)getpid()));
 			break;
 		case 0:
-			Debug(DPROC,
-			      ("[%ld] sigchld...no dead kids\n",
-			       (long)getpid()))
+			Debug(DPROC, ("[%ld] sigchld...no dead kids\n", (long)getpid()));
 			break;
 		default:
-			Debug(DPROC,
-			      ("[%ld] sigchld...pid #%ld died, stat=%d\n",
-			       (long)getpid(), (long)pid, WEXITSTATUS(waiter)))
+			Debug(DPROC, ("[%ld] sigchld...pid #%ld died, stat=%d\n", (long)getpid(), (long)pid, WEXITSTATUS(waiter)));
 			break;
 		}
 	} while (pid > 0);
 }
 
-static void
-parse_args(int argc, char *argv[]) {
-	int argch;
-
-	while (-1 != (argch = getopt(argc, argv, "nM:x:"))) {
-		switch (argch) {
-		default:
-			usage();
-		case 'x':
-			if (!set_debug_flags(optarg))
-				usage();
-			break;
-		case 'M':
-			if (strlen(optarg) == 0)
-				usage();
-			Mailer = optarg;
-			break;
-		}
-	}
-}

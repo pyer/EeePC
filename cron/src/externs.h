@@ -47,14 +47,6 @@
 #include <unistd.h>
 #include <utime.h>
 
-#if defined(LOGIN_CAP)
-# include <login_cap.h>
-#endif /*LOGIN_CAP*/
-
-#if defined(BSD_AUTH)
-# include <bsd_auth.h>
-#endif /*BSD_AUTH*/
-
 #define DIR_T	struct dirent
 #define WAIT_T	int
 #define SIG_T	sig_t

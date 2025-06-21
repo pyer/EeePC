@@ -60,7 +60,7 @@ do_command(const entry *e, const user *u) {
 static void
 child_process(const entry *e, const user *u) {
 	int stdin_pipe[2], stdout_pipe[2];
-	char *input_data, *usernm, *mailto;
+	char *input_data, *usernm;
 	int children = 0;
 
 	Debug(DPROC, ("[%ld] child_process('%s')\n", (long)getpid(), e->cmd))
@@ -68,7 +68,6 @@ child_process(const entry *e, const user *u) {
 	/* discover some useful and important environment settings
 	 */
 	usernm = e->pwd->pw_name;
-	mailto = env_get("MAILTO", e->envp);
 
 	/* our parent is watching for our death by catching SIGCHLD.  we
 	 * do not care to watch for our childrens' deaths this way -- we
@@ -172,59 +171,6 @@ child_process(const entry *e, const user *u) {
 		}
 		dup2(STDOUT, STDERR);
 
-		/* set our directory, uid and gid.  Set gid first, since once
-		 * we set uid, we've lost root privledges.
-		 */
-#ifdef LOGIN_CAP
-		{
-#ifdef BSD_AUTH
-			auth_session_t *as;
-#endif
-			login_cap_t *lc;
-			char **p;
-			extern char **environ;
-
-			if ((lc = login_getclass(e->pwd->pw_class)) == NULL) {
-				fprintf(stderr,
-				    "unable to get login class for %s\n",
-				    e->pwd->pw_name);
-				_exit(ERROR_EXIT);
-			}
-			if (setusercontext(lc, e->pwd, e->pwd->pw_uid, LOGIN_SETALL) < 0) {
-				fprintf(stderr,
-				    "setusercontext failed for %s\n",
-				    e->pwd->pw_name);
-				_exit(ERROR_EXIT);
-			}
-#ifdef BSD_AUTH
-			as = auth_open();
-			if (as == NULL || auth_setpwd(as, e->pwd) != 0) {
-				fprintf(stderr, "can't malloc\n");
-				_exit(ERROR_EXIT);
-			}
-			if (auth_approval(as, lc, usernm, "cron") <= 0) {
-				fprintf(stderr, "approval failed for %s\n",
-				    e->pwd->pw_name);
-				_exit(ERROR_EXIT);
-			}
-			auth_close(as);
-#endif /* BSD_AUTH */
-			login_close(lc);
-
-			/* If no PATH specified in crontab file but
-			 * we just added one via login.conf, add it to
-			 * the crontab environment.
-			 */
-			if (env_get("PATH", e->envp) == NULL && environ != NULL) {
-				for (p = environ; *p; p++) {
-					if (strncmp(*p, "PATH=", 5) == 0) {
-						e->envp = env_set(e->envp, *p);
-						break;
-					}
-				}
-			}
-		}
-#else
 		setgid(e->pwd->pw_gid);
 		initgroups(usernm, e->pwd->pw_gid);
 #if (defined(BSD)) && (BSD >= 199103)
@@ -236,7 +182,6 @@ child_process(const entry *e, const user *u) {
 		}
 		/* we aren't root after this... */
 
-#endif /* LOGIN_CAP */
 		chdir(env_get("HOME", e->envp));
 
 		/*
@@ -244,16 +189,7 @@ child_process(const entry *e, const user *u) {
 		 */
 		{
 			char	*shell = env_get("SHELL", e->envp);
-
-# if DEBUGGING
-			if (DebugFlags & DTEST) {
-				fprintf(stderr,
-				"debug DTEST is on, not exec'ing command.\n");
-				fprintf(stderr,
-				"\tcmd='%s' shell='%s'\n", e->cmd, shell);
-				_exit(OK_EXIT);
-			}
-# endif /*DEBUGGING*/
+			Debug(DPROC, ("cmd='%s' shell='%s'", e->cmd, shell));
 			execle(shell, shell, "-c", e->cmd, (char *)0, e->envp);
 			fprintf(stderr, "execl: couldn't exec `%s'\n", shell);
 			perror("execl");
@@ -358,120 +294,12 @@ child_process(const entry *e, const user *u) {
 		int	ch = getc(in);
 
 		if (ch != EOF) {
-			FILE	*mail;
 			int	bytes = 1;
 			int	status = 0;
 
 			Debug(DPROC|DEXT,
 			      ("[%ld] got data (%x:%c) from grandchild\n",
 			       (long)getpid(), ch, ch))
-
-			/* get name of recipient.  this is MAILTO if set to a
-			 * valid local username; USER otherwise.
-			 */
-			if (mailto) {
-				/* MAILTO was present in the environment
-				 */
-				if (!*mailto) {
-					/* ... but it's empty. set to NULL
-					 */
-					mailto = NULL;
-				}
-			} else {
-				/* MAILTO not present, set to USER.
-				 */
-				mailto = usernm;
-			}
-		
-			/* if the resulting mailto isn't safe, don't use it.
-			 */
-			if (mailto != NULL && !safe_p(usernm, mailto))
-				mailto = NULL;
-
-			/* if we are supposed to be mailing, MAILTO will
-			 * be non-NULL.  only in this case should we set
-			 * up the mail command and subjects and stuff...
-			 */
-			if (mailto != NULL) {
-				char mailcmd[MAX_COMMAND] = "";
-				const char *msg = NULL;
-
-				if (Mailer != NULL) {
-					if (strcountstr(Mailer, "%s") == 1) {
-						if (strlens(Mailer,
-							    mailto,
-							    NULL)
-						    - strlen("%s")
-						    + sizeof ""
-						    > sizeof mailcmd) {
-							msg = "Mailer ovf 1";
-						} else {
-							(void) sprintf(mailcmd,
-								       Mailer,
-								       mailto);
-						}
-					} else {
-						if (strlen(Mailer) + sizeof ""
-						    > sizeof mailcmd) {
-							msg = "Mailer ovf 2";
-						} else {
-							(void) strcpy(mailcmd,
-								      Mailer);
-						}
-					}
-				} else {
-					if (strlens(MAILFMT, MAILARG, NULL)
-					    + sizeof ""
-					    > sizeof mailcmd) {
-						msg = "mailcmd too long";
-					} else {
-						(void) sprintf(mailcmd,
-							       MAILFMT,
-							       MAILARG);
-					}
-				}
-				if (msg != NULL) {
-					fputs(msg, stderr);
-					fputc('\n', stderr);
-					(void) _exit(ERROR_EXIT);
-				}
-				mail = cron_popen(mailcmd, "w", e->pwd);
-				if (mail == NULL) {
-					perror(mailcmd);
-					mailto = NULL;
-				}
-			}
-
-			/* if we succeeded in getting a mailer opened up,
-			 * send the headers and first character of body.
-			 */
-			if (mailto != NULL) {
-				char	hostname[MAXHOSTNAMELEN];
-				char	**env;
-
-				gethostname(hostname, MAXHOSTNAMELEN);
-#ifdef MAIL_FROMUSER
-				fprintf(mail, "From: %s\n", usernm);
-#else
-				fprintf(mail, "From: root (Cron Daemon)\n");
-#endif
-				fprintf(mail, "To: %s\n", mailto);
-				fprintf(mail, "Subject: Cron <%s@%s> %s\n",
-					usernm, first_word(hostname, "."),
-					e->cmd);
-#ifdef MAIL_DATE
-				fprintf(mail, "Date: %s\n",
-					arpadate(&StartTime));
-#endif /*MAIL_DATE*/
-				for (env = e->envp;  *env;  env++)
-					fprintf(mail, "X-Cron-Env: <%s>\n",
-						*env);
-				fprintf(mail, "\n");
-
-				/* this was the first char from the pipe
-				 */
-				putc(ch, mail);
-			}
 
 			/* we have to read the input pipe no matter whether
 			 * we mail or not, but obviously we only write to
@@ -480,38 +308,6 @@ child_process(const entry *e, const user *u) {
 
 			while (EOF != (ch = getc(in))) {
 				bytes++;
-				if (mailto != NULL)
-					putc(ch, mail);
-			}
-
-			/* only close pipe if we opened it -- i.e., we're
-			 * mailing...
-			 */
-
-			if (mailto != NULL) {
-				Debug(DPROC, ("[%ld] closing pipe to mail\n",
-					      (long)getpid()))
-				/* Note: the pclose will probably see
-				 * the termination of the grandchild
-				 * in addition to the mail process, since
-				 * it (the grandchild) is likely to exit
-				 * after closing its stdout.
-				 */
-				status = cron_pclose(mail);
-			}
-
-			/* if there was output and we could not mail it,
-			 * log the facts so the poor user can figure out
-			 * what's going on.
-			 */
-			if (mailto && status) {
-				char buf[MAX_TEMPSTR];
-
-				sprintf(buf,
-			"mailed %d byte%s of output but got status 0x%04x\n",
-					bytes, (bytes==1)?"":"s",
-					status);
-				log_it(usernm, getpid(), "MAIL", buf);
 			}
 
 		} /*if data from grandchild*/

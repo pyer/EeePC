@@ -26,10 +26,11 @@
  */
 
 #define CRON_VERSION "V4.999"
-#include "config.h"
+
 #include "externs.h"
 #include "pathnames.h"
 #include "macros.h"
 #include "structs.h"
 #include "funcs.h"
 #include "globals.h"
+#include "log.h"

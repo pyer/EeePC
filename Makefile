@@ -28,10 +28,12 @@ cron:
 	make -C cron/src
 
 install_cron:
-	sudo install -m  755 -s cron/src/cron    /sbin/
+	sudo install -m 755 -s cron/src/cron /sbin/
 	sudo cp cron/man/bitstring.3 /usr/share/man/man3/
 	sudo cp cron/man/cron.8      /usr/share/man/man8/
 	sudo cp cron/man/crontab.5   /usr/share/man/man5/
+	sudo rm -rf /etc/cron.*
+	sudo rm -rf /var/cron
 
 ####################
 init:

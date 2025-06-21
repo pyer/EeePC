@@ -27,8 +27,6 @@ static char rcsid[] = "$Id: misc.c,v 1.16 2004/01/23 18:56:43 vixie Exp $";
 #include "cron.h"
 #include <limits.h>
 
-static int LogFD = ERR;
-
 /*
  * glue_strings is the overflow-safe equivalent of
  *		sprintf(buffer, "%s%c%s", a, separator, b);
@@ -118,69 +116,6 @@ strcountstr(const char *s, const char *t) {
 	return (ret);
 }
 
-int
-set_debug_flags(const char *flags) {
-	/* debug flags are of the form    flag[,flag ...]
-	 *
-	 * if an error occurs, print a message to stdout and return FALSE.
-	 * otherwise return TRUE after setting ERROR_FLAGS.
-	 */
-
-#if !DEBUGGING
-
-	printf("this program was compiled without debugging enabled\n");
-	return (FALSE);
-
-#else /* DEBUGGING */
-
-	const char *pc = flags;
-
-	DebugFlags = 0;
-
-	while (*pc) {
-		const char	**test;
-		int		mask;
-
-		/* try to find debug flag name in our list.
-		 */
-		for (test = DebugFlagNames, mask = 1;
-		     *test != NULL && strcmp_until(*test, pc, ',');
-		     test++, mask <<= 1)
-			NULL;
-
-		if (!*test) {
-			fprintf(stderr,
-				"unrecognized debug flag <%s> <%s>\n",
-				flags, pc);
-			return (FALSE);
-		}
-
-		DebugFlags |= mask;
-
-		/* skip to the next flag
-		 */
-		while (*pc && *pc != ',')
-			pc++;
-		if (*pc == ',')
-			pc++;
-	}
-
-	if (DebugFlags) {
-		int flag;
-
-		fprintf(stderr, "debug flags enabled:");
-
-		for (flag = 0;  DebugFlagNames[flag];  flag++)
-			if (DebugFlags & (1 << flag))
-				fprintf(stderr, " %s", DebugFlagNames[flag]);
-		fprintf(stderr, "\n");
-	}
-
-	return (TRUE);
-
-#endif /* DEBUGGING */
-}
-
 void
 set_cron_uid(void) {
 #if defined(BSD) || defined(POSIX)
@@ -194,64 +129,6 @@ set_cron_uid(void) {
 		exit(ERROR_EXIT);
 	}
 #endif
-}
-
-void
-set_cron_cwd(void) {
-	struct stat sb;
-	struct group *grp = NULL;
-
-#ifdef CRON_GROUP
-	grp = getgrnam(CRON_GROUP);
-#endif
-	/* first check for CRONDIR ("/var/cron" or some such)
-	 */
-	if (stat(CRONDIR, &sb) < OK && errno == ENOENT) {
-		perror(CRONDIR);
-		if (OK == mkdir(CRONDIR, 0710)) {
-			fprintf(stderr, "%s: created\n", CRONDIR);
-			stat(CRONDIR, &sb);
-		} else {
-			fprintf(stderr, "%s: ", CRONDIR);
-			perror("mkdir");
-			exit(ERROR_EXIT);
-		}
-	}
-	if (!S_ISDIR(sb.st_mode)) {
-		fprintf(stderr, "'%s' is not a directory, bailing out.\n",
-			CRONDIR);
-		exit(ERROR_EXIT);
-	}
-	if (chdir(CRONDIR) < OK) {
-		fprintf(stderr, "cannot chdir(%s), bailing out.\n", CRONDIR);
-		perror(CRONDIR);
-		exit(ERROR_EXIT);
-	}
-
-	/* CRONDIR okay (now==CWD), now look at SPOOL_DIR ("tabs" or some such)
-	 */
-	if (stat(SPOOL_DIR, &sb) < OK && errno == ENOENT) {
-		perror(SPOOL_DIR);
-		if (OK == mkdir(SPOOL_DIR, 0700)) {
-			fprintf(stderr, "%s: created\n", SPOOL_DIR);
-			stat(SPOOL_DIR, &sb);
-		} else {
-			fprintf(stderr, "%s: ", SPOOL_DIR);
-			perror("mkdir");
-			exit(ERROR_EXIT);
-		}
-	}
-	if (!S_ISDIR(sb.st_mode)) {
-		fprintf(stderr, "'%s' is not a directory, bailing out.\n",
-			SPOOL_DIR);
-		exit(ERROR_EXIT);
-	}
-	if (grp != NULL) {
-		if (sb.st_gid != grp->gr_gid)
-			chown(SPOOL_DIR, -1, grp->gr_gid);
-		if (sb.st_mode != 01730)
-			chmod(SPOOL_DIR, 01730);
-	}
 }
 
 /* acquire_daemonlock() - write our PID into /run/cron.pid, unless
@@ -284,7 +161,7 @@ acquire_daemonlock(int closeflag) {
 		if ((fd = open(pidfile, O_RDWR|O_CREAT, 0600)) == -1) {
 			sprintf(buf, "can't open or create %s: %s",
 				pidfile, strerror(errno));
-			fprintf(stderr, "%s: %s\n", ProgramName, buf);
+			fprintf(stderr, "cron: %s\n", buf);
 			log_it("CRON", getpid(), "DEATH", buf);
 			exit(ERROR_EXIT);
 		}
@@ -307,7 +184,7 @@ acquire_daemonlock(int closeflag) {
 			}
 			sprintf(buf, "can't lock %s, otherpid may be %ld: %s",
 				pidfile, otherpid, strerror(save_errno));
-			fprintf(stderr, "%s: %s\n", ProgramName, buf);
+			fprintf(stderr, "cron: %s\n", buf);
 			log_it("CRON", getpid(), "DEATH", buf);
 			exit(ERROR_EXIT);
 		}
@@ -433,98 +310,6 @@ in_file(const char *string, FILE *file, int error)
 	return (FALSE);
 }
 
-/* int allowed(const char *username, const char *allow_file, const char *deny_file)
- *	returns TRUE if (allow_file exists and user is listed)
- *	or (deny_file exists and user is NOT listed).
- *	root is always allowed.
- */
-int
-allowed(const char *username, const char *allow_file, const char *deny_file) {
-	FILE	*fp;
-	int	isallowed;
-
-	if (strcmp(username, ROOT_USER) == 0)
-		return (TRUE);
-	isallowed = FALSE;
-	if ((fp = fopen(allow_file, "r")) != NULL) {
-		isallowed = in_file(username, fp, FALSE);
-		fclose(fp);
-	} else if ((fp = fopen(deny_file, "r")) != NULL) {
-		isallowed = !in_file(username, fp, FALSE);
-		fclose(fp);
-	}
-	return (isallowed);
-}
-
-void
-log_it(const char *username, PID_T xpid, const char *event, const char *detail) {
-#if defined(LOG_FILE) || DEBUGGING
-	PID_T pid = xpid;
-#endif
-#if defined(LOG_FILE)
-	char *msg;
-	TIME_T now = time((TIME_T) 0);
-	struct tm *t = localtime(&now);
-#endif /*LOG_FILE*/
-
-#if defined(LOG_FILE)
-	/* we assume that MAX_TEMPSTR will hold the date, time, &punctuation.
-	 */
-	msg = malloc(strlen(username)
-		     + strlen(event)
-		     + strlen(detail)
-		     + MAX_TEMPSTR);
-	if (msg == NULL)
-		return;
-
-	if (LogFD < OK) {
-		LogFD = open(LOG_FILE, O_WRONLY|O_APPEND|O_CREAT, 0600);
-		if (LogFD < OK) {
-			fprintf(stderr, "%s: can't open log file\n",
-				ProgramName);
-			perror(LOG_FILE);
-		} else {
-			(void) fcntl(LogFD, F_SETFD, 1);
-		}
-	}
-
-	/* we have to sprintf() it because fprintf() doesn't always write
-	 * everything out in one chunk and this has to be atomically appended
-	 * to the log file.
-	 */
-	sprintf(msg, "%s (%02d/%02d-%02d:%02d:%02d-%d) %s (%s)\n",
-		username,
-		t->tm_mon+1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, pid,
-		event, detail);
-
-	/* we have to run strlen() because sprintf() returns (char*) on old BSD
-	 */
-	if (LogFD < OK || write(LogFD, msg, strlen(msg)) < OK) {
-		if (LogFD >= OK)
-			perror(LOG_FILE);
-		fprintf(stderr, "%s: can't write to log file\n", ProgramName);
-		write(STDERR, msg, strlen(msg));
-	}
-
-	free(msg);
-#endif /*LOG_FILE*/
-
-#if DEBUGGING
-	if (DebugFlags) {
-		fprintf(stderr, "log_it: (%s %ld) %s (%s)\n",
-			username, (long)pid, event, detail);
-	}
-#endif
-}
-
-void
-log_close(void) {
-	if (LogFD != ERR) {
-		close(LogFD);
-		LogFD = ERR;
-	}
-}
-
 /* char *first_word(char *s, char *t)
  *	return pointer to first word
  * parameters:
@@ -603,36 +388,6 @@ mkprints(unsigned char *src, unsigned int len) {
 	return (dst);
 }
 
-#ifdef MAIL_DATE
-/* Sat, 27 Feb 1993 11:44:51 -0800 (CST)
- * 1234567890123456789012345678901234567
- */
-char *
-arpadate(clock)
-	time_t *clock;
-{
-	time_t t = clock ? *clock : time((TIME_T) 0);
-	struct tm tm = *localtime(&t);
-	long gmtoff = get_gmtoff(&t, &tm);
-	int hours = gmtoff / SECONDS_PER_HOUR;
-	int minutes = (gmtoff - (hours * SECONDS_PER_HOUR)) / SECONDS_PER_MINUTE;
-	static char ret[64];	/* zone name might be >3 chars */
-	
-	(void) sprintf(ret, "%s, %2d %s %2d %02d:%02d:%02d %.2d%.2d (%s)",
-		       DowNames[tm.tm_wday],
-		       tm.tm_mday,
-		       MonthNames[tm.tm_mon],
-		       tm.tm_year + 1900,
-		       tm.tm_hour,
-		       tm.tm_min,
-		       tm.tm_sec,
-		       hours,
-		       minutes,
-		       TZONE(*tm));
-	return (ret);
-}
-#endif /*MAIL_DATE*/
-
 #ifdef HAVE_SAVED_UIDS
 static uid_t save_euid;
 static gid_t save_egid;
@@ -678,7 +433,6 @@ strlens(const char *last, ...) {
  *	clobbers the static storage space used by localtime() and gmtime().
  *	If the local pointer is non-NULL it *must* point to a local copy.
  */
-#ifndef HAVE_TM_GMTOFF
 long get_gmtoff(time_t *clock, struct tm *local)
 {
 	struct tm gmt;
@@ -704,4 +458,3 @@ long get_gmtoff(time_t *clock, struct tm *local)
 
 	return (offset);
 }
-#endif /* HAVE_TM_GMTOFF */

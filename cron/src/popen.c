@@ -92,14 +92,6 @@ cron_popen(char *program, char *type, struct passwd *pw) {
 		/* NOTREACHED */
 	case 0:				/* child */
 		if (pw) {
-#ifdef LOGIN_CAP
-			if (setusercontext(0, pw, pw->pw_uid, LOGIN_SETALL) < 0) {
-				fprintf(stderr,
-				    "setusercontext failed for %s\n",
-				    pw->pw_name);
-				_exit(ERROR_EXIT);
-			}
-#else
 			if (setgid(pw->pw_gid) < 0 ||
 			    initgroups(pw->pw_name, pw->pw_gid) < 0) {
 				fprintf(stderr,
@@ -116,7 +108,6 @@ cron_popen(char *program, char *type, struct passwd *pw) {
 				    pw->pw_name);
 				_exit(1);
 			}
-#endif /* LOGIN_CAP */
 		}
 		if (*type == 'r') {
 			if (pdes[1] != STDOUT) {

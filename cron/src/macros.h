@@ -32,11 +32,6 @@
 	/*   or this on error */
 #define ERR		(-1)
 
-	/* turn this on to get '-x' code */
-#ifndef DEBUGGING
-#define DEBUGGING	TRUE
-#endif
-
 #define	INIT_PID	1	/* parent of orphans */
 #define READ_PIPE	0	/* which end of a pipe pair do you read? */
 #define WRITE_PIPE	1	/*   or write to? */
@@ -53,9 +48,6 @@
 #define	ROOT_UID	0	/* don't change this, it really must be root */
 #define	ROOT_USER	"root"	/* ditto */
 
-				/* NOTE: these correspond to DebugFlagNames,
-				 *	defined below.
-				 */
 #define	DEXT		0x0001	/* extend flag for other debug masks */
 #define	DSCH		0x0002	/* scheduling debug mask */
 #define	DPROC		0x0004	/* process control debug mask */
@@ -80,23 +72,10 @@
 			while (c!='\t' && c!=' ' && c!='\n' && c != EOF) \
 				c = get_char(f);
 
-#if DEBUGGING
-# define Debug(mask, message) \
-			if ((DebugFlags & (mask)) != 0) \
-				printf message;
-#else /* !DEBUGGING */
-# define Debug(mask, message) \
-			;
-#endif /* DEBUGGING */
-
 #define	MkUpper(ch)	(islower(ch) ? toupper(ch) : ch)
 #define	Set_LineNum(ln)	{Debug(DPARS|DEXT,("linenum=%d\n",ln)); \
 			 LineNumber = ln; \
 			}
-
-#ifdef HAVE_TM_GMTOFF
-#define	get_gmtoff(c, t)	((t)->tm_gmtoff)
-#endif
 
 #define	SECONDS_PER_MINUTE	60
 #define	SECONDS_PER_HOUR	3600

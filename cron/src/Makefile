@@ -56,18 +56,15 @@ CDEBUG		=	-g
 CWARN		=	-Wall -Wno-unused -Wno-comment
 #<<manifest defines>>
 DEFS		=
-#(SGI IRIX systems need this)
-#DEFS		=	-D_BSD_SIGNALS -Dconst=
-#<<any special load flags>>
 LDFLAGS		= -s
 #################################### end configurable stuff
 
 SHELL		=	/bin/sh
 CFLAGS		=	$(CDEBUG) $(CWARN) $(INCLUDE) $(DEFS)
 
-HEADERS	=	bitstring.h cron.h config.h pathnames.h externs.h macros.h structs.h funcs.h globals.h
-SOURCES	=	cron.c crontab.c database.c do_command.c entry.c env.c job.c user.c popen.c misc.c pw_dup.c
-OBJECTS	=	cron.o database.o user.o entry.o job.o do_command.o misc.o env.o popen.o pw_dup.o
+HEADERS	=	bitstring.h cron.h pathnames.h externs.h macros.h structs.h funcs.h globals.h
+SOURCES	=	cron.c database.c do_command.c entry.c env.c job.c log.c user.c misc.c popen.c pw_dup.c
+OBJECTS	=	cron.o database.o do_command.o entry.o env.o job.o log.o user.o misc.o popen.o pw_dup.o
 
 
 all: cron
@@ -75,7 +72,7 @@ all: cron
 cron: $(OBJECTS)
 			$(CC) $(LDFLAGS) -o cron $(OBJECTS)
 
-$(OBJECTS): cron.h config.h externs.h pathnames.h Makefile
+$(OBJECTS): $(HEADERS) Makefile
 
 clean:
 			rm -f *~

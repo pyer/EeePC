@@ -336,7 +336,6 @@ load_entry(FILE *file, void (*error_func)(const char *),
 		} else
 			log_it("CRON", getpid(), "error", "can't set HOME");
 	}
-#ifndef LOGIN_CAP
 	/* If login.conf is in used we will get the default PATH later. */
 	if (!env_get("PATH", e->envp)) {
 		if (glue_strings(envstr, sizeof envstr, "PATH",
@@ -349,7 +348,6 @@ load_entry(FILE *file, void (*error_func)(const char *),
 		} else
 			log_it("CRON", getpid(), "error", "can't set PATH");
 	}
-#endif /* LOGIN_CAP */
 	if (glue_strings(envstr, sizeof envstr, "LOGNAME",
 			 pw->pw_name, '=')) {
 		if ((tenvp = env_set(e->envp, envstr)) == NULL) {

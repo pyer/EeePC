@@ -77,6 +77,4 @@ FILE		*cron_popen(char *, char *, struct passwd *);
 
 struct passwd	*pw_dup(const struct passwd *);
 
-#ifndef HAVE_TM_GMTOFF
 long		get_gmtoff(time_t *, struct tm *);
-#endif

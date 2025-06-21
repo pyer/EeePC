@@ -38,7 +38,7 @@ is_greater_than(struct timespec left, struct timespec right) {
 }
 
 
-static	void		process_crontab(const char *, const char *,
+static	void		process_crontab(
 					const char *, struct stat *,
 					cron_db *, cron_db *);
 
@@ -52,83 +52,21 @@ load_database(cron_db *old_db) {
 
 	Debug(DLOAD, ("[%ld] load_database()\n", (long)getpid()))
 
-	/* before we start loading any data, do a stat on SPOOL_DIR
-	 * so that if anything changes as of this moment (i.e., before we've
-	 * cached any of the database), we'll see the changes next time.
-	 */
-	if (stat(SPOOL_DIR, &statbuf) < OK) {
-		log_it("CRON", getpid(), "STAT FAILED", SPOOL_DIR);
-		(void) exit(ERROR_EXIT);
-	}
-
 	/* track system crontab file
 	 */
 	if (stat(SYSCRONTAB, &syscron_stat) < OK)
 		syscron_stat.st_mtim = ts_zero;
-
-	/* if spooldir's mtime has not changed, we don't need to fiddle with
-	 * the database.
-	 *
-	 * Note that old_db->mtime is initialized to 0 in main(), and
-	 * so is guaranteed to be different than the stat() mtime the first
-	 * time this function is called.
-	 */
-	if (TEQUAL(old_db->mtim, TMAX(statbuf.st_mtim, syscron_stat.st_mtim))) {
-		Debug(DLOAD, ("[%ld] spool dir mtime unch, no load needed.\n",
-			      (long)getpid()))
-		return;
-	}
 
 	/* something's different.  make a new database, moving unchanged
 	 * elements from the old database, reloading elements that have
 	 * actually changed.  Whatever is left in the old database when
 	 * we're done is chaff -- crontabs that disappeared.
 	 */
-	new_db.mtim = TMAX(statbuf.st_mtim, syscron_stat.st_mtim);
+	new_db.mtim = syscron_stat.st_mtim;
 	new_db.head = new_db.tail = NULL;
 
 	if (!TEQUAL(syscron_stat.st_mtim, ts_zero))
-		process_crontab("root", NULL, SYSCRONTAB, &syscron_stat,
-				&new_db, old_db);
-
-	/* we used to keep this dir open all the time, for the sake of
-	 * efficiency.  however, we need to close it in every fork, and
-	 * we fork a lot more often than the mtime of the dir changes.
-	 */
-	if (!(dir = opendir(SPOOL_DIR))) {
-		log_it("CRON", getpid(), "OPENDIR FAILED", SPOOL_DIR);
-		(void) exit(ERROR_EXIT);
-	}
-
-	while (NULL != (dp = readdir(dir))) {
-		char fname[MAXNAMLEN+1], tabname[MAXNAMLEN+1];
-
-		/* avoid file names beginning with ".".  this is good
-		 * because we would otherwise waste two guaranteed calls
-		 * to getpwnam() for . and .., and also because user names
-		 * starting with a period are just too nasty to consider.
-		 */
-		if (dp->d_name[0] == '.')
-			continue;
-
-		if (strlen(dp->d_name) >= sizeof fname)
-			continue;	/* XXX log? */
-		(void) strcpy(fname, dp->d_name);
-		
-		if (!glue_strings(tabname, sizeof tabname, SPOOL_DIR,
-				  fname, '/'))
-			continue;	/* XXX log? */
-
-		process_crontab(fname, fname, tabname,
-				&statbuf, &new_db, old_db);
-	}
-	closedir(dir);
-
-	/* if we don't do this, then when our children eventually call
-	 * getpwnam() in do_command.c's child_process to verify MAILTO=,
-	 * they will screw us up (and v-v).
-	 */
-	endpwent();
+		process_crontab(SYSCRONTAB, &syscron_stat, &new_db, old_db);
 
 	/* whatever's left in the old database is now junk.
 	 */
@@ -181,23 +119,13 @@ find_user(cron_db *db, const char *name) {
 }
 
 static void
-process_crontab(const char *uname, const char *fname, const char *tabname,
+process_crontab(const char *tabname,
 		struct stat *statbuf, cron_db *new_db, cron_db *old_db)
 {
+  char *fname = "root";
 	struct passwd *pw = NULL;
 	int crontab_fd = OK - 1;
 	user *u;
-
-	if (fname == NULL) {
-		/* must be set to something for logging purposes.
-		 */
-		fname = "*system*";
-	} else if ((pw = getpwnam(uname)) == NULL) {
-		/* file doesn't have a user in passwd file.
-		 */
-		log_it(fname, getpid(), "ORPHAN", "no passwd entry");
-		goto next_crontab;
-	}
 
 	if ((crontab_fd = open(tabname, O_RDONLY|O_NONBLOCK|O_NOFOLLOW, 0)) < OK) {
 		/* crontab not accessible?
@@ -216,11 +144,6 @@ process_crontab(const char *uname, const char *fname, const char *tabname,
 	}
 	if ((statbuf->st_mode & 07777) != 0600) {
 		log_it(fname, getpid(), "BAD FILE MODE", tabname);
-		goto next_crontab;
-	}
-	if (statbuf->st_uid != ROOT_UID && (pw == NULL ||
-	    statbuf->st_uid != pw->pw_uid || strcmp(uname, pw->pw_name) != 0)) {
-		log_it(fname, getpid(), "WRONG FILE OWNER", tabname);
 		goto next_crontab;
 	}
 	if (statbuf->st_nlink != 1) {
