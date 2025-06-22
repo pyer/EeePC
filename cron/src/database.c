@@ -54,7 +54,7 @@ load_database(cron_db *old_db) {
 
 	/* track system crontab file
 	 */
-	if (stat(SYSCRONTAB, &syscron_stat) < OK)
+	if (stat(CRON_TAB, &syscron_stat) < OK)
 		syscron_stat.st_mtim = ts_zero;
 
 	/* something's different.  make a new database, moving unchanged
@@ -66,7 +66,7 @@ load_database(cron_db *old_db) {
 	new_db.head = new_db.tail = NULL;
 
 	if (!TEQUAL(syscron_stat.st_mtim, ts_zero))
-		process_crontab(SYSCRONTAB, &syscron_stat, &new_db, old_db);
+		process_crontab(CRON_TAB, &syscron_stat, &new_db, old_db);
 
 	/* whatever's left in the old database is now junk.
 	 */

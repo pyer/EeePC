@@ -316,7 +316,7 @@ load_entry(FILE *file, void (*error_func)(const char *),
 	}
 	if (!env_get("SHELL", e->envp)) {
 		if (glue_strings(envstr, sizeof envstr, "SHELL",
-				 _PATH_BSHELL, '=')) {
+				 "/bin/sh", '=')) {
 			if ((tenvp = env_set(e->envp, envstr)) == NULL) {
 				ecode = e_memory;
 				goto eof;
@@ -339,7 +339,7 @@ load_entry(FILE *file, void (*error_func)(const char *),
 	/* If login.conf is in used we will get the default PATH later. */
 	if (!env_get("PATH", e->envp)) {
 		if (glue_strings(envstr, sizeof envstr, "PATH",
-				 _PATH_DEFPATH, '=')) {
+				 "/bin", '=')) {
 			if ((tenvp = env_set(e->envp, envstr)) == NULL) {
 				ecode = e_memory;
 				goto eof;

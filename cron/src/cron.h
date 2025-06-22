@@ -25,10 +25,52 @@
  * vix 30dec86 [written]
  */
 
-#define CRON_VERSION "V4.999"
+#define CRON_VERSION "5.0"
+#define CRON_PID     "/run/cron.pid"
+#define CRON_TAB	   "/etc/crontab"
 
-#include "externs.h"
-#include "pathnames.h"
+
+/* reorder these #include's at your peril */
+
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/wait.h>
+#include <sys/fcntl.h>
+#include <sys/file.h>
+#include <sys/stat.h>
+
+#include <bitstring.h>
+#include <ctype.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <grp.h>
+#include <locale.h>
+#include <pwd.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
+#include <utime.h>
+
+#define DIR_T	struct dirent
+#define WAIT_T	int
+#define SIG_T	sig_t
+#define TIME_T	time_t
+#define PID_T	pid_t
+
+/*
+#ifndef TZNAME_ALREADY_DEFINED
+extern char *tzname[2];
+#endif
+#define TZONE(tm) tzname[(tm).tm_isdst]
+*/
+
 #include "macros.h"
 #include "structs.h"
 #include "funcs.h"
