@@ -151,7 +151,8 @@ process_crontab(const char *tabname,
 		goto next_crontab;
 	}
 
-	Debug(DLOAD, ("\t%s:", fname))
+	log_it(fname, getpid(), "LOAD", tabname);
+
 	u = find_user(old_db, fname);
 	if (u != NULL) {
 		/* if crontab has not changed since we last read it

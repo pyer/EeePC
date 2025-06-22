@@ -4,6 +4,12 @@
 
 // #define DEBUGGING	1
 
+#if DEBUGGING
+# define Debug(mask, message) printf message;
+#else /* !DEBUGGING */
+# define Debug(mask, message) ;
+#endif /* DEBUGGING */
+
 #define	DEXT		0x0001	/* extend flag for other debug masks */
 #define	DSCH		0x0002	/* scheduling debug mask */
 #define	DPROC		0x0004	/* process control debug mask */
@@ -12,11 +18,4 @@
 #define	DMISC		0x0020	/* misc debug mask */
 #define	DTEST		0x0040	/* test mode: don't execute any commands */
 
-//void log_debug(int mask, char *msg);
-
-#if DEBUGGING
-# define Debug(mask, message) printf message;
-#else /* !DEBUGGING */
-# define Debug(mask, message) ;
-#endif /* DEBUGGING */
-
+void log_it(const char *, int, const char *, const char *);

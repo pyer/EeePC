@@ -39,9 +39,7 @@ void		set_cron_uid(void),
 		unget_char(int, FILE *),
 		free_entry(entry *),
 		acquire_daemonlock(int),
-		skip_comments(FILE *),
-		log_it(const char *, int, const char *, const char *),
-		log_close(void);
+		skip_comments(FILE *);
 
 int		job_runqueue(void),
 		set_debug_flags(const char *),

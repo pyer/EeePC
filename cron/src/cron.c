@@ -187,7 +187,6 @@ int main(int argc, char *argv[]) {
 		/* Check to see if we received a signal while running jobs. */
 		if (got_sighup) {
 			got_sighup = 0;
-			log_close();
 		}
 		if (got_sigchld) {
 			got_sigchld = 0;
@@ -310,7 +309,6 @@ cron_sleep(int target) {
 		 */
 		if (got_sighup) {
 			got_sighup = 0;
-			log_close();
 		}
 		if (got_sigchld) {
 			got_sigchld = 0;

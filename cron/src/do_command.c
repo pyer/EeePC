@@ -141,10 +141,6 @@ child_process(const entry *e, const user *u) {
 			free(x);
 		}
 
-		/* that's the last thing we'll log.  close the log files.
-		 */
-		log_close();
-
 		/* get new pgrp, void tty, etc.
 		 */
 		(void) setsid();
