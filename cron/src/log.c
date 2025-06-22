@@ -39,7 +39,7 @@ void log_it(const char *username, pid_t xpid, const char *event, const char *det
 	   * everything out in one chunk and this has to be atomically appended
 	   * to the log file.
 	   */
-    len = sprintf(msg, "%04d-%02d-%02dT%02d:%02d:%02d %-9s [%d] %s: %s\n",
+    len = sprintf(msg, "%04d-%02d-%02d %02d:%02d:%02d %-9s [%d] %s: %s\n",
     		        t->tm_year + 1900,
     		        t->tm_mon+1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec,
                 username, xpid, event, detail);
