@@ -317,8 +317,8 @@ child_process(const entry *e, const user *u) {
 	/* wait for children to die.
 	 */
 	for (; children > 0; children--) {
-		WAIT_T waiter;
-		PID_T pid;
+		int waiter;
+		pid_t pid;
 
 		Debug(DPROC, ("[%ld] waiting for grandchild #%d to finish\n",
 			      (long)getpid(), children))

@@ -338,8 +338,8 @@ quit(int x) {
 
 static void
 sigchld_reaper(void) {
-	WAIT_T waiter;
-	PID_T pid;
+	int waiter;
+	pid_t pid;
 
 	do {
 		pid = waitpid(-1, &waiter, WNOHANG);

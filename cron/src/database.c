@@ -46,8 +46,6 @@ void
 load_database(cron_db *old_db) {
 	struct stat statbuf, syscron_stat;
 	cron_db new_db;
-	DIR_T *dp;
-	DIR *dir;
 	user *u, *nu;
 
 	Debug(DLOAD, ("[%ld] load_database()\n", (long)getpid()))

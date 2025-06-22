@@ -42,7 +42,6 @@
 
 #include <bitstring.h>
 #include <ctype.h>
-#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
@@ -58,18 +57,7 @@
 #include <unistd.h>
 #include <utime.h>
 
-#define DIR_T	struct dirent
-#define WAIT_T	int
-#define SIG_T	sig_t
-#define TIME_T	time_t
-#define PID_T	pid_t
-
-/*
-#ifndef TZNAME_ALREADY_DEFINED
-extern char *tzname[2];
-#endif
-#define TZONE(tm) tzname[(tm).tm_isdst]
-*/
+/* application headers */
 
 #include "macros.h"
 #include "structs.h"

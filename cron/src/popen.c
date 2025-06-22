@@ -54,7 +54,7 @@ static char rcsid[] = "$Id: popen.c,v 1.6 2003/02/16 04:40:01 vixie Exp $";
  * may create a pipe to a hidden program as a side effect of a list or dir
  * command.
  */
-static PID_T *pids;
+static pid_t *pids;
 static int fds;
 
 FILE *
@@ -62,7 +62,7 @@ cron_popen(char *program, char *type, struct passwd *pw) {
 	char *cp;
 	FILE *iop;
 	int argc, pdes[2];
-	PID_T pid;
+	pid_t pid;
 	char *argv[MAX_ARGV];
 
 	if ((*type != 'r' && *type != 'w') || type[1] != '\0')
@@ -71,9 +71,9 @@ cron_popen(char *program, char *type, struct passwd *pw) {
 	if (!pids) {
 		if ((fds = sysconf(_SC_OPEN_MAX)) <= 0)
 			return (NULL);
-		if (!(pids = (PID_T *)malloc((size_t)(fds * sizeof(PID_T)))))
+		if (!(pids = (pid_t *)malloc((size_t)(fds * sizeof(pid_t)))))
 			return (NULL);
-		bzero(pids, fds * sizeof(PID_T));
+		bzero(pids, fds * sizeof(pid_t));
 	}
 	if (pipe(pdes) < 0)
 		return (NULL);
@@ -143,8 +143,8 @@ cron_popen(char *program, char *type, struct passwd *pw) {
 int
 cron_pclose(FILE *iop) {
 	int fdes;
-	PID_T pid;
-	WAIT_T status;
+	int status;
+	pid_t pid;
 	sigset_t sigset, osigset;
 
 	/*
