@@ -108,11 +108,17 @@ unlink_user(cron_db *db, user *u) {
 
 user *
 find_user(cron_db *db, const char *name) {
-	user *u;
+	user *u = NULL;
 
 	for (u = db->head;  u != NULL;  u = u->next)
 		if (strcmp(u->name, name) == 0)
 			break;
+  if (u == NULL) {
+		log_it("NULL", getpid(), "CAN'T FIND USER", name);
+  } else {
+		log_it(u->name, getpid(), "FIND USER", name);
+  }
+
 	return (u);
 }
 
@@ -138,10 +144,6 @@ process_crontab(const char *tabname,
 	}
 	if (!S_ISREG(statbuf->st_mode)) {
 		log_it(fname, getpid(), "NOT REGULAR", tabname);
-		goto next_crontab;
-	}
-	if ((statbuf->st_mode & 07777) != 0600) {
-		log_it(fname, getpid(), "BAD FILE MODE", tabname);
 		goto next_crontab;
 	}
 	if (statbuf->st_nlink != 1) {
