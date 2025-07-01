@@ -84,7 +84,7 @@ load_user(int crontab_fd, struct passwd	*pw, const char *name) {
 			u = NULL;
 			goto done;
 		case FALSE:
-			e = load_entry(file, NULL, pw, envp);
+			e = load_entry(file, envp);
 			if (e) {
 				e->next = u->crontab;
 				u->crontab = e;

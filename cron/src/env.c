@@ -47,6 +47,8 @@ env_copy(char **envp) {
 
 	for (count = 0; envp[count] != NULL; count++)
 		NULL;
+	Debug(DPARS, ("env_copy, count = %d\n", count))
+
 	p = (char **) malloc((count+1) * sizeof(char *));  /* 1 for the NULL */
 	if (p != NULL) {
 		for (i = 0; i < count; i++)

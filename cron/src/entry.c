@@ -65,9 +65,7 @@ free_entry(entry *e) {
 /* return NULL if eof or syntax error occurs;
  * otherwise return a pointer to a new entry.
  */
-entry *
-load_entry(FILE *file, void (*error_func)(const char *),
-	   struct passwd *pw, char **envp)
+entry * load_entry(FILE *file, char **envp)
 {
 	/* this function reads one crontab entry -- the next -- from a file.
 	 * it skips any leading blank lines, ignores comments, and returns
@@ -89,7 +87,7 @@ load_entry(FILE *file, void (*error_func)(const char *),
 	char envstr[MAX_ENVSTR];
 	char **tenvp;
 
-	Debug(DPARS, ("load_entry()...about to eat comments\n"))
+	Debug(DPARS, ("load_entry()... about to eat comments\n"))
 
 	skip_comments(file);
 
@@ -272,11 +270,11 @@ load_entry(FILE *file, void (*error_func)(const char *),
 		goto eof;
 	}
 
-	/* ch is the first character of a command, or a username */
+	/* ch is the first character of a username */
 	unget_char(ch, file);
 
-	if (!pw) {
-		char		*username = cmd;	/* temp buffer */
+  struct passwd *pw = NULL;
+	char	*username = cmd;	/* temp buffer */
 
 		Debug(DPARS, ("load_entry()...about to parse username\n"))
 		ch = get_string(username, MAX_COMMAND, file, " \t\n");
@@ -299,7 +297,6 @@ load_entry(FILE *file, void (*error_func)(const char *),
 		}
 		Debug(DPARS, ("load_entry()...uid %ld, gid %ld\n",
 			      (long)pw->pw_uid, (long)pw->pw_gid))
-	}
 
 	if ((e->pwd = pw_dup(pw)) == NULL) {
 		ecode = e_memory;
@@ -427,8 +424,6 @@ load_entry(FILE *file, void (*error_func)(const char *),
 	free(e);
 	while (ch != '\n' && !feof(file))
 		ch = get_char(file);
-	if (ecode != e_none && error_func != NULL)
-		(*error_func)(ecodes[(int)ecode]);
 	return (NULL);
 }
 
