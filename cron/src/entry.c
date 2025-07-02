@@ -16,37 +16,7 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#if !defined(lint) && !defined(LINT)
-static char rcsid[] = "$Id: entry.c,v 1.17 2004/01/23 18:56:42 vixie Exp $";
-#endif
-
-/* vix 26jan87 [RCS'd; rest of log is in RCS file]
- * vix 01jan87 [added line-level error recovery]
- * vix 31dec86 [added /step to the from-to range, per bob@acornrc]
- * vix 30dec86 [written]
- */
-
 #include "cron.h"
-
-typedef	enum ecode {
-	e_none, e_minute, e_hour, e_dom, e_month, e_dow,
-	e_cmd, e_timespec, e_username, e_option, e_memory
-} ecode_e;
-
-static const char *ecodes[] =
-	{
-		"no error",
-		"bad minute",
-		"bad hour",
-		"bad day-of-month",
-		"bad month",
-		"bad day-of-week",
-		"bad command",
-		"bad time specifier",
-		"bad username",
-		"bad option",
-		"out of memory"
-	};
 
 static int	get_list(bitstr_t *, int, int, const char *[], int, FILE *),
 		get_range(bitstr_t *, int, int, const char *[], int, FILE *),
@@ -71,16 +41,10 @@ entry * load_entry(FILE *file, char **envp)
 	 * it skips any leading blank lines, ignores comments, and returns
 	 * NULL if for any reason the entry can't be read and parsed.
 	 *
-	 * the entry is also parsed here.
-	 *
-	 * syntax:
-	 *   user crontab:
-	 *	minutes hours doms months dows cmd\n
-	 *   system crontab (/etc/crontab):
+	 * syntax (/etc/crontab):
 	 *	minutes hours doms months dows USERNAME cmd\n
 	 */
 
-	ecode_e	ecode = e_none;
 	entry *e;
 	int ch;
 	char cmd[MAX_COMMAND];
@@ -178,7 +142,6 @@ entry * load_entry(FILE *file, char **envp)
 				  FIRST_DOW, LAST_DOW, 1);
 			e->flags |= HR_STAR;
 		} else {
-			ecode = e_timespec;
 			goto eof;
 		}
 		/* Advance past whitespace between shortcut and
@@ -186,7 +149,6 @@ entry * load_entry(FILE *file, char **envp)
 		 */
 		Skip_Blanks(ch, file);
 		if (ch == EOF || ch == '\n') {
-			ecode = e_cmd;
 			goto eof;
 		}
 	} else {
@@ -197,7 +159,6 @@ entry * load_entry(FILE *file, char **envp)
 		ch = get_list(e->minute, FIRST_MINUTE, LAST_MINUTE,
 			      PPC_NULL, ch, file);
 		if (ch == EOF) {
-			ecode = e_minute;
 			goto eof;
 		}
 
@@ -209,7 +170,6 @@ entry * load_entry(FILE *file, char **envp)
 		ch = get_list(e->hour, FIRST_HOUR, LAST_HOUR,
 			      PPC_NULL, ch, file);
 		if (ch == EOF) {
-			ecode = e_hour;
 			goto eof;
 		}
 
@@ -219,7 +179,6 @@ entry * load_entry(FILE *file, char **envp)
 		if (ch == '$') {
 			ch = get_char(file);
 			if (!Is_Blank(ch)) {
-				ecode = e_dom;
 				goto eof;
 			}
 			Skip_Blanks(ch, file);
@@ -231,7 +190,6 @@ entry * load_entry(FILE *file, char **envp)
 				      PPC_NULL, ch, file);
 		}
 		if (ch == EOF) {
-			ecode = e_dom;
 			goto eof;
 		}
 
@@ -241,7 +199,6 @@ entry * load_entry(FILE *file, char **envp)
 		ch = get_list(e->month, FIRST_MONTH, LAST_MONTH,
 			      MonthNames, ch, file);
 		if (ch == EOF) {
-			ecode = e_month;
 			goto eof;
 		}
 
@@ -253,7 +210,6 @@ entry * load_entry(FILE *file, char **envp)
 		ch = get_list(e->dow, FIRST_DOW, LAST_DOW,
 			      DowNames, ch, file);
 		if (ch == EOF) {
-			ecode = e_dow;
 			goto eof;
 		}
 	}
@@ -266,7 +222,6 @@ entry * load_entry(FILE *file, char **envp)
 
 	/* check for permature EOL and catch a common typo */
 	if (ch == '\n' || ch == '*') {
-		ecode = e_cmd;
 		goto eof;
 	}
 
@@ -281,7 +236,6 @@ entry * load_entry(FILE *file, char **envp)
 
 		Debug(DPARS, ("load_entry()...got %s\n",username))
 		if (ch == EOF || ch == '\n' || ch == '*') {
-			ecode = e_cmd;
 			goto eof;
 		}
 
@@ -292,14 +246,12 @@ entry * load_entry(FILE *file, char **envp)
 
 		pw = getpwnam(username);
 		if (pw == NULL) {
-			ecode = e_username;
 			goto eof;
 		}
 		Debug(DPARS, ("load_entry()...uid %ld, gid %ld\n",
 			      (long)pw->pw_uid, (long)pw->pw_gid))
 
 	if ((e->pwd = pw_dup(pw)) == NULL) {
-		ecode = e_memory;
 		goto eof;
 	}
 	bzero(e->pwd->pw_passwd, strlen(e->pwd->pw_passwd));
@@ -308,14 +260,12 @@ entry * load_entry(FILE *file, char **envp)
 	 * others are overrides.
 	 */
 	if ((e->envp = env_copy(envp)) == NULL) {
-		ecode = e_memory;
 		goto eof;
 	}
 	if (!env_get("SHELL", e->envp)) {
 		if (glue_strings(envstr, sizeof envstr, "SHELL",
 				 "/bin/sh", '=')) {
 			if ((tenvp = env_set(e->envp, envstr)) == NULL) {
-				ecode = e_memory;
 				goto eof;
 			}
 			e->envp = tenvp;
@@ -326,7 +276,6 @@ entry * load_entry(FILE *file, char **envp)
 		if (glue_strings(envstr, sizeof envstr, "HOME",
 				 pw->pw_dir, '=')) {
 			if ((tenvp = env_set(e->envp, envstr)) == NULL) {
-				ecode = e_memory;
 				goto eof;
 			}
 			e->envp = tenvp;
@@ -338,7 +287,6 @@ entry * load_entry(FILE *file, char **envp)
 		if (glue_strings(envstr, sizeof envstr, "PATH",
 				 "/bin", '=')) {
 			if ((tenvp = env_set(e->envp, envstr)) == NULL) {
-				ecode = e_memory;
 				goto eof;
 			}
 			e->envp = tenvp;
@@ -348,45 +296,19 @@ entry * load_entry(FILE *file, char **envp)
 	if (glue_strings(envstr, sizeof envstr, "LOGNAME",
 			 pw->pw_name, '=')) {
 		if ((tenvp = env_set(e->envp, envstr)) == NULL) {
-			ecode = e_memory;
 			goto eof;
 		}
 		e->envp = tenvp;
 	} else
 		log_it("CRON", getpid(), "error", "can't set LOGNAME");
-#if defined(BSD) || defined(__linux)
 	if (glue_strings(envstr, sizeof envstr, "USER",
 			 pw->pw_name, '=')) {
 		if ((tenvp = env_set(e->envp, envstr)) == NULL) {
-			ecode = e_memory;
 			goto eof;
 		}
 		e->envp = tenvp;
 	} else
 		log_it("CRON", getpid(), "error", "can't set USER");
-#endif
-
-	Debug(DPARS, ("load_entry()...about to parse command\n"))
-
-	/* If the first character of the command is '-' it is a cron option.
-	 */
-	while ((ch = get_char(file)) == '-') {
-		switch (ch = get_char(file)) {
-		case 'q':
-			e->flags |= DONT_LOG;
-			Skip_Nonblanks(ch, file)
-			break;
-		default:
-			ecode = e_option;
-			goto eof;
-		}
-		Skip_Blanks(ch, file)
-		if (ch == EOF || ch == '\n') {
-			ecode = e_cmd;
-			goto eof;
-		}
-	}
-	unget_char(ch, file);
 
 	/* Everything up to the next \n or EOF is part of the command...
 	 * too bad we don't know in advance how long it will be, since we
@@ -397,14 +319,12 @@ entry * load_entry(FILE *file, char **envp)
 	/* a file without a \n before the EOF is rude, so we'll complain...
 	 */
 	if (ch == EOF) {
-		ecode = e_cmd;
 		goto eof;
 	}
 
 	/* got the command in the 'cmd' string; save it in *e.
 	 */
 	if ((e->cmd = strdup(cmd)) == NULL) {
-		ecode = e_memory;
 		goto eof;
 	}
 
