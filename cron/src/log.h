@@ -18,4 +18,8 @@
 #define	DMISC		0x0020	/* misc debug mask */
 #define	DTEST		0x0040	/* test mode: don't execute any commands */
 
+#define	Set_LineNum(ln)	{Debug(DPARS|DEXT,("linenum=%d\n",ln)); \
+			 LineNumber = ln; \
+			}
+
 void log_it(const char *, int, const char *, const char *);
