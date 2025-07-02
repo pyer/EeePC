@@ -25,18 +25,16 @@ static char rcsid[] = "$Id: job.c,v 1.6 2004/01/23 18:56:43 vixie Exp $";
 typedef	struct _job {
 	struct _job	*next;
 	const entry	*e;
-	const user	*u;
 } job;
 
 static job	*jhead = NULL, *jtail = NULL;
 
-void
-job_add(const entry *e, const user *u) {
+void job_add(const entry *e) {
 	job *j;
 
 	/* if already on queue, keep going */
 	for (j = jhead; j != NULL; j = j->next)
-		if (j->e == e && j->u == u)
+		if (j->e == e)
 			return;
 
 	/* build a job queue element */
@@ -44,7 +42,6 @@ job_add(const entry *e, const user *u) {
 		return;
 	j->next = NULL;
 	j->e = e;
-	j->u = u;
 
 	/* add it to the tail */
 	if (jhead == NULL)
@@ -54,13 +51,12 @@ job_add(const entry *e, const user *u) {
 	jtail = j;
 }
 
-int
-job_runqueue(void) {
+int job_runqueue(void) {
 	job *j, *jn;
 	int run = 0;
 
 	for (j = jhead; j; j = jn) {
-		do_command(j->e, j->u);
+		do_command(j->e);
 		jn = j->next;
 		free(j);
 		run++;
@@ -68,3 +64,4 @@ job_runqueue(void) {
 	jhead = jtail = NULL;
 	return (run);
 }
+

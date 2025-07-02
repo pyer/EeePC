@@ -30,11 +30,8 @@ void		set_cron_uid(void),
 		load_database(cron_db *),
 		open_logfile(void),
 		sigpipe_func(void),
-		job_add(const entry *, const user *),
-		do_command(const entry *, const user *),
-		link_user(cron_db *, user *),
-		unlink_user(cron_db *, user *),
-		free_user(user *),
+		job_add(const entry *),
+		do_command(const entry *),
 		env_free(char **),
 		unget_char(int, FILE *),
 		free_entry(entry *),
@@ -64,9 +61,6 @@ char		*env_get(char *, char **),
 		**env_init(void),
 		**env_copy(char **),
 		**env_set(char **, char *);
-
-user		*load_user(int, struct passwd *, const char *),
-		*find_user(cron_db *, const char *);
 
 entry		*load_entry(FILE *, char **);
 

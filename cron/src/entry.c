@@ -255,6 +255,7 @@ entry * load_entry(FILE *file, char **envp)
 		goto eof;
 	}
 	bzero(e->pwd->pw_passwd, strlen(e->pwd->pw_passwd));
+  e->name = pw->pw_name;
 
 	/* copy and fix up environment.  some variables are just defaults and
 	 * others are overrides.

@@ -16,120 +16,36 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#if !defined(lint) && !defined(LINT)
-static char rcsid[] = "$Id: database.c,v 1.7 2004/01/23 18:56:42 vixie Exp $";
-#endif
-
-/* vix 26jan87 [RCS has the log]
- */
-
 #include "cron.h"
 
-#define TMAX(a,b) (is_greater_than(a,b)?(a):(b))
-#define TEQUAL(a,b) (a.tv_sec == b.tv_sec && a.tv_nsec == b.tv_nsec)
 
-static bool
-is_greater_than(struct timespec left, struct timespec right) {
-	if (left.tv_sec > right.tv_sec)
-		return TRUE;
-	else if (left.tv_sec < right.tv_sec)
-		return FALSE;
-	return left.tv_nsec > right.tv_nsec;
+/* something's different.  make a new database, moving unchanged
+ * elements from the old database, reloading elements that have
+ * actually changed.  Whatever is left in the old database when
+ * we're done is chaff -- crontabs that disappeared.
+ */
+void clear_database(cron_db *db) {
+	entry *e, *ne;
+	  // whatever's left in the old database is now junk.
+	  Debug(DLOAD, ("unlinking old database:\n"))
+	  for (e = db->entrypoint;  e != NULL;  e = ne) {
+		  Debug(DLOAD, ("\t%s\n", e->name))
+		  ne = e->next;
+		  free_entry(e);
+	  }
+	  db->entrypoint = NULL;
 }
 
-
-static	void		process_crontab(
-					const char *, struct stat *,
-					cron_db *, cron_db *);
-
-void
-load_database(cron_db *old_db) {
-	struct stat statbuf, syscron_stat;
-	cron_db new_db;
-	user *u, *nu;
-
-	Debug(DLOAD, ("[%ld] load_database()\n", (long)getpid()))
-
-	/* track system crontab file
-	 */
-	if (stat(CRON_TAB, &syscron_stat) < OK)
-		syscron_stat.st_mtim = ts_zero;
-
-	/* something's different.  make a new database, moving unchanged
-	 * elements from the old database, reloading elements that have
-	 * actually changed.  Whatever is left in the old database when
-	 * we're done is chaff -- crontabs that disappeared.
-	 */
-	new_db.mtim = syscron_stat.st_mtim;
-	new_db.head = new_db.tail = NULL;
-
-	if (!TEQUAL(syscron_stat.st_mtim, ts_zero))
-		process_crontab(CRON_TAB, &syscron_stat, &new_db, old_db);
-
-	/* whatever's left in the old database is now junk.
-	 */
-	Debug(DLOAD, ("unlinking old database:\n"))
-	for (u = old_db->head;  u != NULL;  u = nu) {
-		Debug(DLOAD, ("\t%s\n", u->name))
-		nu = u->next;
-		unlink_user(old_db, u);
-		free_user(u);
-	}
-
-	/* overwrite the database control block with the new one.
-	 */
-	*old_db = new_db;
-	Debug(DLOAD, ("load_database is done\n"))
-}
-
-void
-link_user(cron_db *db, user *u) {
-	if (db->head == NULL)
-		db->head = u;
-	if (db->tail)
-		db->tail->next = u;
-	u->prev = db->tail;
-	u->next = NULL;
-	db->tail = u;
-}
-
-void
-unlink_user(cron_db *db, user *u) {
-	if (u->prev == NULL)
-		db->head = u->next;
-	else
-		u->prev->next = u->next;
-
-	if (u->next == NULL)
-		db->tail = u->prev;
-	else
-		u->next->prev = u->prev;
-}
-
-user *
-find_user(cron_db *db, const char *name) {
-	user *u = NULL;
-
-	for (u = db->head;  u != NULL;  u = u->next)
-		if (strcmp(u->name, name) == 0)
-			break;
-  if (u == NULL) {
-		log_it("NULL", getpid(), "CAN'T FIND USER", name);
-  } else {
-		log_it(u->name, getpid(), "FIND USER", name);
-  }
-
-	return (u);
-}
-
-static void
-process_crontab(const char *tabname,
-		struct stat *statbuf, cron_db *new_db, cron_db *old_db)
+static void process_crontab(const char *tabname, struct stat *statbuf, cron_db *new_db)
 {
   char *fname = "root";
 	struct passwd *pw = NULL;
 	int crontab_fd = OK - 1;
-	user *u;
+	char envstr[MAX_ENVSTR];
+	FILE *file;
+	entry *e;
+	int status, save_errno;
+	char **envp, **tenvp;
 
 	if ((crontab_fd = open(tabname, O_RDONLY|O_NONBLOCK|O_NOFOLLOW, 0)) < OK) {
 		/* crontab not accessible?
@@ -153,35 +69,45 @@ process_crontab(const char *tabname,
 
 	log_it(fname, getpid(), "LOAD", tabname);
 
-	u = find_user(old_db, fname);
-	if (u != NULL) {
-		/* if crontab has not changed since we last read it
-		 * in, then we can just use our existing entry.
-		 */
-		if (TEQUAL(u->mtim, statbuf->st_mtim)) {
-			Debug(DLOAD, (" [no change, using old data]"))
-			unlink_user(old_db, u);
-			link_user(new_db, u);
-			goto next_crontab;
-		}
+	if (!(file = fdopen(crontab_fd, "r"))) {
+		perror("fdopen on crontab_fd in load_user");
+		goto next_crontab;
+	}
 
-		/* before we fall through to the code that will reload
-		 * the user, let's deallocate and unlink the user in
-		 * the old database.  This is more a point of memory
-		 * efficiency than anything else, since all leftover
-		 * users will be deleted from the old database when
-		 * we finish with the crontab...
-		 */
-		Debug(DLOAD, (" [delete old data]"))
-		unlink_user(old_db, u);
-		free_user(u);
-		log_it(fname, getpid(), "RELOAD", tabname);
+	/* file is open, read the crontab file.
+	 */
+
+	/* init environment.  this will be copied/augmented for each entry.
+	 */
+	if ((envp = env_init()) == NULL) {
+		save_errno = errno;
+    fclose(file);
+		errno = save_errno;
+	} else {
+
+	  while ((status = load_env(envstr, file)) >= OK) {
+			e = load_entry(file, envp);
+			if (e) {
+				e->next = new_db->entrypoint;
+				new_db->entrypoint = e;
+			}
+	  }
+  /*
+		case TRUE:
+			if ((tenvp = env_set(envp, envstr)) == NULL) {
+				save_errno = errno;
+				free_user(u);
+				u = NULL;
+				errno = save_errno;
+				goto done;
+			}
+			envp = tenvp;
+			break;
+		}
+*/
 	}
-	u = load_user(crontab_fd, pw, fname);
-	if (u != NULL) {
-		u->mtim = statbuf->st_mtim;
-		link_user(new_db, u);
-	}
+	env_free(envp);
+	fclose(file);
 
  next_crontab:
 	if (crontab_fd >= OK) {
@@ -189,3 +115,25 @@ process_crontab(const char *tabname,
 		close(crontab_fd);
 	}
 }
+
+
+void load_database(cron_db *db) { struct stat statbuf, syscron_stat;
+
+	Debug(DLOAD, ("[%ld] load_database()\n", (long)getpid()))
+
+	/* track system crontab file
+	 */
+	if (stat(CRON_TAB, &syscron_stat) < OK)
+		syscron_stat.st_mtim = ts_zero;
+
+  Debug(DLOAD, ("STAT %s: %ld , database: %ld\n", CRON_TAB, syscron_stat.st_mtim.tv_sec, db->mtim.tv_sec))
+//	if (!TEQUAL(syscron_stat.st_mtim, ts_zero))
+  if (syscron_stat.st_mtim.tv_sec > db->mtim.tv_sec) {
+    clear_database(db);
+		process_crontab(CRON_TAB, &syscron_stat, db);
+		db->mtim.tv_sec = syscron_stat.st_mtim.tv_sec;
+  }
+
+	Debug(DLOAD, ("load_database is done\n"))
+}
+

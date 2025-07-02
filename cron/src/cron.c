@@ -59,9 +59,10 @@ int main(int argc, char *argv[]) {
 	acquire_daemonlock(0);
 	set_cron_uid();
 
-	database.head = NULL;
-	database.tail = NULL;
+	database.entrypoint = NULL;
 	database.mtim = ts_zero;
+  /* First load
+   */
 	load_database(&database);
 	set_time(TRUE);
 	run_reboot_jobs(&database);
@@ -88,6 +89,9 @@ int main(int argc, char *argv[]) {
 		} while (clockTime == timeRunning);
 		timeRunning = clockTime;
 
+    /* Check if the crontab file has changed
+     */
+		load_database(&database);
 		/*
 		 * Calculate how the current time differs from our virtual
 		 * clock.  Classify the change into one of 4 cases.
@@ -192,20 +196,17 @@ int main(int argc, char *argv[]) {
 			got_sigchld = 0;
 			sigchld_reaper();
 		}
-		load_database(&database);
 	}
 }
 
 static void
 run_reboot_jobs(cron_db *db) {
-	user *u;
 	entry *e;
 
-	for (u = db->head; u != NULL; u = u->next) {
-		for (e = u->crontab; e != NULL; e = e->next) {
-			if (e->flags & WHEN_REBOOT)
-				job_add(e, u);
-		}
+	for (e = db->entrypoint; e != NULL; e = e->next) {
+			if (e->flags & WHEN_REBOOT) {
+				job_add(e);
+  		}
 	}
 	(void) job_runqueue();
 }
@@ -237,8 +238,7 @@ find_jobs(int vtime, cron_db *db, int doWild, int doNonWild) {
 	 * like many bizarre things, it's the standard.
 	 */
 	const bool is_lastdom = (tom.tm_mday == 1);
-	for (const user *u = db->head; u != NULL; u = u->next) {
-		for (const entry *e = u->crontab; e != NULL; e = e->next) {
+	for (const entry *e = db->entrypoint; e != NULL; e = e->next) {
 			Debug(DSCH|DEXT, ("user [%s:%ld:%ld:...] cmd=\"%s\"\n",
 			    e->pwd->pw_name, (long)e->pwd->pw_uid,
 			    (long)e->pwd->pw_gid, e->cmd))
@@ -257,9 +257,8 @@ find_jobs(int vtime, cron_db *db, int doWild, int doNonWild) {
 				    (doWild &&
 				     (e->flags & (MIN_STAR|HR_STAR)) != 0)
 				    )
-					job_add(e, u);
+					job_add(e);
 			}
-		}
 	}
 }
 

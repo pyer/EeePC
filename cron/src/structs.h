@@ -21,6 +21,7 @@
 
 typedef	struct _entry {
 	struct _entry	*next;
+	char		*name;
 	struct passwd	*pwd;
 	char		**envp;
 	char		*cmd;
@@ -39,22 +40,12 @@ typedef	struct _entry {
 #define	DONT_LOG	0x40
 } entry;
 
-			/* the crontab database will be a list of the
-			 * following structure, one element per user
-			 * plus one for the system.
-			 *
-			 * These are the crontabs.
-			 */
-
-typedef	struct _user {
-	struct _user	*next, *prev;	/* links */
-	char		*name;
-	struct timespec mtim;   	/* last modtime of crontab */
-	entry		*crontab;	/* this person's crontab */
-} user;
+/* the crontab database is a list of entries
+ */
 
 typedef	struct _cron_db {
-	user		*head, *tail;	/* links */
+	//user		*head, *tail;	/* links */
+  entry  *entrypoint;
 	struct timespec mtim;		/* last modtime on spooldir */
 } cron_db;
 				/* in the C tradition, we only create

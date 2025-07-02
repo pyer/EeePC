@@ -63,8 +63,8 @@ SHELL		=	/bin/sh
 CFLAGS		=	$(CDEBUG) $(CWARN) $(INCLUDE) $(DEFS)
 
 HEADERS	=	bitstring.h cron.h macros.h structs.h funcs.h globals.h
-SOURCES	=	cron.c database.c do_command.c entry.c env.c job.c log.c user.c misc.c popen.c pw_dup.c
-OBJECTS	=	cron.o database.o do_command.o entry.o env.o job.o log.o user.o misc.o popen.o pw_dup.o
+SOURCES	=	cron.c database.c do_command.c entry.c env.c job.c log.c misc.c popen.c pw_dup.c
+OBJECTS	=	cron.o database.o do_command.o entry.o env.o job.o log.o misc.o popen.o pw_dup.o
 
 
 all: cron

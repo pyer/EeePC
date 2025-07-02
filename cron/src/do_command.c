@@ -22,13 +22,12 @@ static char rcsid[] = "$Id: do_command.c,v 1.12 2021/02/07 00:20:00 vixie Exp $"
 
 #include "cron.h"
 
-static void		child_process(const entry *, const user *);
-static int		safe_p(const char *, const char *);
+static void		child_process(const entry *);
 
 void
-do_command(const entry *e, const user *u) {
+do_command(const entry *e) {
 	Debug(DPROC, ("[%ld] do_command(%s, (%s,%ld,%ld))\n",
-		      (long)getpid(), e->cmd, u->name,
+		      (long)getpid(), e->cmd, e->name,
 		      (long)e->pwd->pw_uid, (long)e->pwd->pw_gid))
 
 	/* fork to become asynchronous -- parent process is done immediately,
@@ -45,7 +44,7 @@ do_command(const entry *e, const user *u) {
 	case 0:
 		/* child process */
 		acquire_daemonlock(1);
-		child_process(e, u);
+		child_process(e);
 		Debug(DPROC, ("[%ld] child process done, exiting\n",
 			      (long)getpid()))
 		_exit(OK_EXIT);
@@ -58,16 +57,12 @@ do_command(const entry *e, const user *u) {
 }
 
 static void
-child_process(const entry *e, const user *u) {
+child_process(const entry *e) {
 	int stdin_pipe[2], stdout_pipe[2];
-	char *input_data, *usernm;
+	char *input_data;
 	int children = 0;
 
 	Debug(DPROC, ("[%ld] child_process('%s')\n", (long)getpid(), e->cmd))
-
-	/* discover some useful and important environment settings
-	 */
-	usernm = e->pwd->pw_name;
 
 	/* our parent is watching for our death by catching SIGCHLD.  we
 	 * do not care to watch for our childrens' deaths this way -- we
@@ -137,7 +132,7 @@ child_process(const entry *e, const user *u) {
 		if ((e->flags & DONT_LOG) == 0) {
 			char *x = mkprints((u_char *)e->cmd, strlen(e->cmd));
 
-			log_it(usernm, getpid(), "CMD", x);
+			log_it(e->name, getpid(), "CMD", x);
 			free(x);
 		}
 
@@ -168,10 +163,7 @@ child_process(const entry *e, const user *u) {
 		dup2(STDOUT, STDERR);
 
 		setgid(e->pwd->pw_gid);
-		initgroups(usernm, e->pwd->pw_gid);
-#if (defined(BSD)) && (BSD >= 199103)
-		setlogin(usernm);
-#endif /* BSD */
+		initgroups(e->name, e->pwd->pw_gid);
 		if (setuid(e->pwd->pw_uid) < 0) {
 			perror("setuid");
 			_exit(ERROR_EXIT);
@@ -338,18 +330,3 @@ child_process(const entry *e, const user *u) {
 	}
 }
 
-static int
-safe_p(const char *usernm, const char *s) {
-	static const char safe_delim[] = "@!:%-.,";     /* conservative! */
-	const char *t;
-	int ch, first;
-
-	for (t = s, first = 1; (ch = *t++) != '\0'; first = 0) {
-		if (isascii(ch) && isprint(ch) &&
-		    (isalnum(ch) || (!first && strchr(safe_delim, ch))))
-			continue;
-		log_it(usernm, getpid(), "UNSAFE", s);
-		return (FALSE);
-	}
-	return (TRUE);
-}
