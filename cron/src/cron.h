@@ -27,7 +27,7 @@
 
 #define CRON_VERSION "5.0"
 #define CRON_PID     "/run/cron.pid"
-#define CRON_TAB	   "/etc/crontab"
+#define CRON_TAB     "/etc/crontab"
 
 
 /* reorder these #include's at your peril */

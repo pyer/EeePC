@@ -19,38 +19,37 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-typedef	struct _entry {
-	struct _entry	*next;
-	char	*name;
+typedef  struct _entry {
+  struct _entry  *next;
+  char  *name;
   long  uid; 
   long  gid; 
-//	struct passwd	*pwd;
-	char		**envp;
-	char		*cmd;
-	bitstr_t	bit_decl(minute, MINUTE_COUNT);
-	bitstr_t	bit_decl(hour,   HOUR_COUNT);
-	bitstr_t	bit_decl(dom,    DOM_COUNT);
-	bitstr_t	bit_decl(month,  MONTH_COUNT);
-	bitstr_t	bit_decl(dow,    DOW_COUNT);
-	int		flags;
-#define	MIN_STAR	0x01
-#define	HR_STAR		0x02
-#define	DOM_STAR	0x04
-#define	DOW_STAR	0x08
-#define	DOM_LAST	0x10
-#define	WHEN_REBOOT	0x20
-#define	DONT_LOG	0x40
+  char    **envp;
+  char    *cmd;
+  bitstr_t  bit_decl(minute, MINUTE_COUNT);
+  bitstr_t  bit_decl(hour,   HOUR_COUNT);
+  bitstr_t  bit_decl(dom,    DOM_COUNT);
+  bitstr_t  bit_decl(month,  MONTH_COUNT);
+  bitstr_t  bit_decl(dow,    DOW_COUNT);
+  int    flags;
+#define  MIN_STAR  0x01
+#define  HR_STAR    0x02
+#define  DOM_STAR  0x04
+#define  DOW_STAR  0x08
+#define  DOM_LAST  0x10
+#define  WHEN_REBOOT  0x20
+#define  DONT_LOG  0x40
 } entry;
 
 /* the crontab database is a list of entries
  */
 
-typedef	struct _cron_db {
-	//user		*head, *tail;	/* links */
+typedef  struct _cron_db {
   entry  *entrypoint;
-	struct timespec mtim;		/* last modtime on spooldir */
+  struct timespec mtim;    /* last modtime of crontab file */
 } cron_db;
-				/* in the C tradition, we only create
-				 * variables for the main program, just
-				 * extern them elsewhere.
-				 */
+
+        /* in the C tradition, we only create
+         * variables for the main program, just
+         * extern them elsewhere.
+         */

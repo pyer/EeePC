@@ -22,46 +22,46 @@ static char rcsid[] = "$Id: job.c,v 1.6 2004/01/23 18:56:43 vixie Exp $";
 
 #include "cron.h"
 
-typedef	struct _job {
-	struct _job	*next;
-	const entry	*e;
+typedef  struct _job {
+  struct _job  *next;
+  const entry  *e;
 } job;
 
-static job	*jhead = NULL, *jtail = NULL;
+static job  *jhead = NULL, *jtail = NULL;
 
 void job_add(const entry *e) {
-	job *j;
+  job *j;
 
-	/* if already on queue, keep going */
-	for (j = jhead; j != NULL; j = j->next)
-		if (j->e == e)
-			return;
+  /* if already on queue, keep going */
+  for (j = jhead; j != NULL; j = j->next)
+    if (j->e == e)
+      return;
 
-	/* build a job queue element */
-	if ((j = (job *)malloc(sizeof(job))) == NULL)
-		return;
-	j->next = NULL;
-	j->e = e;
+  /* build a job queue element */
+  if ((j = (job *)malloc(sizeof(job))) == NULL)
+    return;
+  j->next = NULL;
+  j->e = e;
 
-	/* add it to the tail */
-	if (jhead == NULL)
-		jhead = j;
-	else
-		jtail->next = j;
-	jtail = j;
+  /* add it to the tail */
+  if (jhead == NULL)
+    jhead = j;
+  else
+    jtail->next = j;
+  jtail = j;
 }
 
 int job_runqueue(void) {
-	job *j, *jn;
-	int run = 0;
+  job *j, *jn;
+  int run = 0;
 
-	for (j = jhead; j; j = jn) {
-		do_command(j->e);
-		jn = j->next;
-		free(j);
-		run++;
-	}
-	jhead = jtail = NULL;
-	return (run);
+  for (j = jhead; j; j = jn) {
+    do_command(j->e);
+    jn = j->next;
+    free(j);
+    run++;
+  }
+  jhead = jtail = NULL;
+  return (run);
 }
 
