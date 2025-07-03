@@ -24,11 +24,13 @@ static int	get_list(bitstr_t *, int, int, const char *[], int, FILE *),
 		set_element(bitstr_t *, int, int, int),
 		set_range(bitstr_t *, int, int, int, int, int);
 
-void
-free_entry(entry *e) {
-	free(e->cmd);
-	free(e->pwd);
-	env_free(e->envp);
+void free_entry(entry *e) {
+	if (e->envp)
+		env_free(e->envp);
+	if (e->name)
+		free(e->name);
+	if (e->cmd)
+		free(e->cmd);
 	free(e);
 }
 
@@ -246,16 +248,22 @@ entry * load_entry(FILE *file, char **envp)
 
 		pw = getpwnam(username);
 		if (pw == NULL) {
+		  log_it(username, getpid(), "USER", "not found");
 			goto eof;
 		}
-		Debug(DPARS, ("load_entry()...uid %ld, gid %ld\n",
-			      (long)pw->pw_uid, (long)pw->pw_gid))
+		//log_it(username, getpid(), "USER", "found");
 
-	if ((e->pwd = pw_dup(pw)) == NULL) {
-		goto eof;
+	/* Allocate the name buffer */
+  e->name = NULL;
+	if (pw->pw_name) {
+    int len = strlen(pw->pw_name) + 1;
+	  e->name = malloc(len);
+	  if (e->name == NULL)
+		  goto eof;
+		(void)memcpy(e->name, pw->pw_name, len);
 	}
-	bzero(e->pwd->pw_passwd, strlen(e->pwd->pw_passwd));
-  e->name = pw->pw_name;
+  e->uid=pw->pw_uid;
+  e->gid=pw->pw_gid;
 
 	/* copy and fix up environment.  some variables are just defaults and
 	 * others are overrides.
@@ -336,13 +344,7 @@ entry * load_entry(FILE *file, char **envp)
 	return (e);
 
  eof:
-	if (e->envp)
-		env_free(e->envp);
-	if (e->pwd)
-		free(e->pwd);
-	if (e->cmd)
-		free(e->cmd);
-	free(e);
+  free_entry(e);
 	while (ch != '\n' && !feof(file))
 		ch = get_char(file);
 	return (NULL);

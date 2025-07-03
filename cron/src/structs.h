@@ -21,8 +21,10 @@
 
 typedef	struct _entry {
 	struct _entry	*next;
-	char		*name;
-	struct passwd	*pwd;
+	char	*name;
+  long  uid; 
+  long  gid; 
+//	struct passwd	*pwd;
 	char		**envp;
 	char		*cmd;
 	bitstr_t	bit_decl(minute, MINUTE_COUNT);

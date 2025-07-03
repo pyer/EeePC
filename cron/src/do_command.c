@@ -28,7 +28,7 @@ void
 do_command(const entry *e) {
 	Debug(DPROC, ("[%ld] do_command(%s, (%s,%ld,%ld))\n",
 		      (long)getpid(), e->cmd, e->name,
-		      (long)e->pwd->pw_uid, (long)e->pwd->pw_gid))
+		      (long)e->uid, (long)e->gid))
 
 	/* fork to become asynchronous -- parent process is done immediately,
 	 * and continues to run the normal cron code, which means return to
@@ -162,9 +162,9 @@ child_process(const entry *e) {
 		}
 		dup2(STDOUT, STDERR);
 
-		setgid(e->pwd->pw_gid);
-		initgroups(e->name, e->pwd->pw_gid);
-		if (setuid(e->pwd->pw_uid) < 0) {
+		setgid(e->gid);
+		initgroups(e->name, e->gid);
+		if (setuid(e->uid) < 0) {
 			perror("setuid");
 			_exit(ERROR_EXIT);
 		}

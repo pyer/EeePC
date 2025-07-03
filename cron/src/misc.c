@@ -248,8 +248,7 @@ get_string(char *string, int size, FILE *file, char *terms) {
 
 /* skip_comments(file) : read past comment (if any)
  */
-void
-skip_comments(FILE *file) {
+int skip_comments(FILE *file) {
 	int ch;
 
 	while (EOF != (ch = get_char(file))) {
@@ -281,6 +280,7 @@ skip_comments(FILE *file) {
 	}
 	if (ch != EOF)
 		unget_char(ch, file);
+  return ch;
 }
 
 /* int in_file(const char *string, FILE *file, int error)

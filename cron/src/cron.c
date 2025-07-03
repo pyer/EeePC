@@ -240,8 +240,8 @@ find_jobs(int vtime, cron_db *db, int doWild, int doNonWild) {
 	const bool is_lastdom = (tom.tm_mday == 1);
 	for (const entry *e = db->entrypoint; e != NULL; e = e->next) {
 			Debug(DSCH|DEXT, ("user [%s:%ld:%ld:...] cmd=\"%s\"\n",
-			    e->pwd->pw_name, (long)e->pwd->pw_uid,
-			    (long)e->pwd->pw_gid, e->cmd))
+			    e->name, (long)e->uid,
+			    (long)e->gid, e->cmd))
 			bool thisdom = bit_test(e->dom, dom) ||
 				(is_lastdom && (e->flags & DOM_LAST) != 0);
 			bool thisdow = bit_test(e->dow, dow);

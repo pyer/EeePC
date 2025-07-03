@@ -35,8 +35,7 @@ void		set_cron_uid(void),
 		env_free(char **),
 		unget_char(int, FILE *),
 		free_entry(entry *),
-		acquire_daemonlock(int),
-		skip_comments(FILE *);
+		acquire_daemonlock(int);
 
 int		job_runqueue(void),
 		set_debug_flags(const char *),
@@ -44,11 +43,12 @@ int		job_runqueue(void),
 		get_string(char *, int, FILE *, char *),
 		swap_uids(void),
 		swap_uids_back(void),
-		load_env(char *, FILE *),
+		load_env(FILE *),
 		cron_pclose(FILE *),
 		glue_strings(char *, size_t, const char *, const char *, char),
 		strcmp_until(const char *, const char *, char),
 		allowed(const char *, const char *, const char *),
+		skip_comments(FILE *),
 		strdtb(char *),
 		strcountstr(const char *, const char *);
 

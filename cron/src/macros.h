@@ -29,8 +29,6 @@
 #define FALSE		0
 	/* system calls return this on success */
 #define OK		0
-	/*   or this on error */
-#define ERR		(-1)
 
 #define	INIT_PID	1	/* parent of orphans */
 #define READ_PIPE	0	/* which end of a pipe pair do you read? */

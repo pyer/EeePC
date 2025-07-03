@@ -41,11 +41,11 @@ static void process_crontab(const char *tabname, struct stat *statbuf, cron_db *
   char *fname = "root";
 	struct passwd *pw = NULL;
 	int crontab_fd = OK - 1;
-	char envstr[MAX_ENVSTR];
 	FILE *file;
 	entry *e;
-	int status, save_errno;
-	char **envp, **tenvp;
+  int st;
+	int ch;
+	char **envp;
 
 	if ((crontab_fd = open(tabname, O_RDONLY|O_NONBLOCK|O_NOFOLLOW, 0)) < OK) {
 		/* crontab not accessible?
@@ -69,45 +69,37 @@ static void process_crontab(const char *tabname, struct stat *statbuf, cron_db *
 
 	log_it(fname, getpid(), "LOAD", tabname);
 
+	/* init environment.  this will be copied/augmented for each entry.
+	 */
+
+	if ((envp = env_init()) == NULL) {
+		goto next_crontab;
+	}
+
 	if (!(file = fdopen(crontab_fd, "r"))) {
 		perror("fdopen on crontab_fd in load_user");
 		goto next_crontab;
 	}
 
-	/* file is open, read the crontab file.
-	 */
+  do {
+      ch = skip_comments(file);
+      if (ch>='A' && ch<='Z') {
+        st = load_env(file);
+        if (st == FALSE)
+	        log_it(fname, getpid(), "ENV", "error");
+        else
+	        log_it(fname, getpid(), "ENV", "ok");
+      } else {
+			  e = load_entry(file, envp);
+			  if (e) {
+				  e->next = new_db->entrypoint;
+				  new_db->entrypoint = e;
+			  }
+	    }
+  } while( ch != EOF);
 
-	/* init environment.  this will be copied/augmented for each entry.
-	 */
-	if ((envp = env_init()) == NULL) {
-		save_errno = errno;
-    fclose(file);
-		errno = save_errno;
-	} else {
-
-	  while ((status = load_env(envstr, file)) >= OK) {
-			e = load_entry(file, envp);
-			if (e) {
-				e->next = new_db->entrypoint;
-				new_db->entrypoint = e;
-			}
-	  }
-  /*
-		case TRUE:
-			if ((tenvp = env_set(envp, envstr)) == NULL) {
-				save_errno = errno;
-				free_user(u);
-				u = NULL;
-				errno = save_errno;
-				goto done;
-			}
-			envp = tenvp;
-			break;
-		}
-*/
-	}
-	env_free(envp);
 	fclose(file);
+	env_free(envp);
 
  next_crontab:
 	if (crontab_fd >= OK) {
