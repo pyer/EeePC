@@ -26,9 +26,9 @@ static void    child_process(const entry *);
 
 void
 do_command(const entry *e) {
-  Debug(DPROC, ("[%ld] do_command(%s, (%s,%ld,%ld))\n",
+  Debug(DPROC, ("[%ld] do_command(%s, (%s,%ld,%ld)) %s\n",
           (long)getpid(), e->cmd, e->name,
-          (long)e->uid, (long)e->gid))
+          (long)e->uid, (long)e->gid, e->shell))
 
   /* fork to become asynchronous -- parent process is done immediately,
    * and continues to run the normal cron code, which means return to
@@ -129,12 +129,7 @@ child_process(const entry *e) {
      * the actual user command shell was going to get and the
      * PID is part of the log message.
      */
-    if ((e->flags & DONT_LOG) == 0) {
-      char *x = mkprints((u_char *)e->cmd, strlen(e->cmd));
-
-      log_it(e->name, getpid(), "CMD", x);
-      free(x);
-    }
+    log_it("EXEC", getpid(), e->name, e->cmd);
 
     /* get new pgrp, void tty, etc.
      */
@@ -169,17 +164,15 @@ child_process(const entry *e) {
       _exit(ERROR_EXIT);
     }
     /* we aren't root after this... */
-
-    chdir(env_get("HOME", e->envp));
+    chdir(e->home);
 
     /*
      * Exec the command.
      */
     {
-      char  *shell = env_get("SHELL", e->envp);
-      Debug(DPROC, ("cmd='%s' shell='%s'", e->cmd, shell));
-      execle(shell, shell, "-c", e->cmd, (char *)0, e->envp);
-      fprintf(stderr, "execl: couldn't exec `%s'\n", shell);
+      Debug(DPROC, ("cmd='%s' shell='%s'", e->cmd, e->shell));
+      execl(e->shell, e->shell, "-c", e->cmd, (char *)0);
+      fprintf(stderr, "execl: couldn't exec `%s'\n", e->shell);
       perror("execl");
       _exit(ERROR_EXIT);
     }

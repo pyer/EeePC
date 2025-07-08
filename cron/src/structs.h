@@ -22,9 +22,10 @@
 typedef  struct _entry {
   struct _entry  *next;
   char  *name;
+  char  *home;
+  char  *shell;
   long  uid; 
   long  gid; 
-  char    **envp;
   char    *cmd;
   bitstr_t  bit_decl(minute, MINUTE_COUNT);
   bitstr_t  bit_decl(hour,   HOUR_COUNT);

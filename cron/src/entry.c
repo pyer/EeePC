@@ -25,10 +25,12 @@ static int  get_list(bitstr_t *, int, int, const char *[], int, FILE *),
     set_range(bitstr_t *, int, int, int, int, int);
 
 void free_entry(entry *e) {
-  if (e->envp)
-    env_free(e->envp);
   if (e->name)
     free(e->name);
+  if (e->home)
+    free(e->home);
+  if (e->shell)
+    free(e->shell);
   if (e->cmd)
     free(e->cmd);
   free(e);
@@ -37,7 +39,7 @@ void free_entry(entry *e) {
 /* return NULL if eof or syntax error occurs;
  * otherwise return a pointer to a new entry.
  */
-entry * load_entry(FILE *file, char **envp)
+entry * load_entry(FILE *file)
 {
   /* this function reads one crontab entry -- the next -- from a file.
    * it skips any leading blank lines, ignores comments, and returns
@@ -50,11 +52,8 @@ entry * load_entry(FILE *file, char **envp)
   entry *e;
   int ch;
   char cmd[MAX_COMMAND];
-  char envstr[MAX_ENVSTR];
-  char **tenvp;
 
   Debug(DPARS, ("load_entry()... about to eat comments\n"))
-
   skip_comments(file);
 
   ch = get_char(file);
@@ -66,7 +65,9 @@ entry * load_entry(FILE *file, char **envp)
    * of a list of minutes.
    */
 
+  Debug(DPARS, ("load_entry()...\n"))
   e = (entry *) calloc(sizeof(entry), sizeof(char));
+  Debug(DPARS, ("load_entry()... %p\n",e))
 
   if (ch == '@') {
     /* all of these should be flagged and load-limited; i.e.,
@@ -248,76 +249,18 @@ entry * load_entry(FILE *file, char **envp)
 
     pw = getpwnam(username);
     if (pw == NULL) {
-      log_it(username, getpid(), "USER", "not found");
+      log_it("USER", getpid(), username, "not found");
       goto eof;
     }
-    //log_it(username, getpid(), "USER", "found");
+  log_it("USER", getpid(), username, "found");
 
   /* Allocate the name buffer */
-  e->name = NULL;
-  if (pw->pw_name) {
-    int len = strlen(pw->pw_name) + 1;
-    e->name = malloc(len);
-    if (e->name == NULL)
-      goto eof;
-    (void)memcpy(e->name, pw->pw_name, len);
-  }
+  e->name = strdup(pw->pw_name);
+  e->home = strdup(pw->pw_dir);
+  e->shell = strdup(pw->pw_shell);
+
   e->uid=pw->pw_uid;
   e->gid=pw->pw_gid;
-
-  /* copy and fix up environment.  some variables are just defaults and
-   * others are overrides.
-   */
-  if ((e->envp = env_copy(envp)) == NULL) {
-    goto eof;
-  }
-  if (!env_get("SHELL", e->envp)) {
-    if (glue_strings(envstr, sizeof envstr, "SHELL",
-         "/bin/sh", '=')) {
-      if ((tenvp = env_set(e->envp, envstr)) == NULL) {
-        goto eof;
-      }
-      e->envp = tenvp;
-    } else
-      log_it("CRON", getpid(), "error", "can't set SHELL");
-  }
-  if (!env_get("HOME", e->envp)) {
-    if (glue_strings(envstr, sizeof envstr, "HOME",
-         pw->pw_dir, '=')) {
-      if ((tenvp = env_set(e->envp, envstr)) == NULL) {
-        goto eof;
-      }
-      e->envp = tenvp;
-    } else
-      log_it("CRON", getpid(), "error", "can't set HOME");
-  }
-  /* If login.conf is in used we will get the default PATH later. */
-  if (!env_get("PATH", e->envp)) {
-    if (glue_strings(envstr, sizeof envstr, "PATH",
-         "/bin", '=')) {
-      if ((tenvp = env_set(e->envp, envstr)) == NULL) {
-        goto eof;
-      }
-      e->envp = tenvp;
-    } else
-      log_it("CRON", getpid(), "error", "can't set PATH");
-  }
-  if (glue_strings(envstr, sizeof envstr, "LOGNAME",
-       pw->pw_name, '=')) {
-    if ((tenvp = env_set(e->envp, envstr)) == NULL) {
-      goto eof;
-    }
-    e->envp = tenvp;
-  } else
-    log_it("CRON", getpid(), "error", "can't set LOGNAME");
-  if (glue_strings(envstr, sizeof envstr, "USER",
-       pw->pw_name, '=')) {
-    if ((tenvp = env_set(e->envp, envstr)) == NULL) {
-      goto eof;
-    }
-    e->envp = tenvp;
-  } else
-    log_it("CRON", getpid(), "error", "can't set USER");
 
   /* Everything up to the next \n or EOF is part of the command...
    * too bad we don't know in advance how long it will be, since we

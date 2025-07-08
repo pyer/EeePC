@@ -62,10 +62,4 @@ XTRN const char *DowNames[]
   ;
 
 XTRN int  LineNumber INIT(0);
-XTRN time_t  StartTime INIT(0);
-XTRN const struct timespec ts_zero 
-#ifdef MAIN_PROGRAM
-= {.tv_sec = 0, .tv_nsec = 0}
-#endif
-;
 

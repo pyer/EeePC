@@ -40,7 +40,6 @@
 #define  OK_EXIT    0  /* exit() with this is considered 'normal' */
 #define  MAX_FNAME  100  /* max length of internally generated fn */
 #define  MAX_COMMAND  1000  /* max length of internally generated cmd */
-#define  MAX_ENVSTR  1000  /* max length of envvar=value\0 strings */
 #define  MAX_TEMPSTR  100  /* obvious */
 #define  MAX_UNAME  33  /* max length of username, should be overkill */
 #define  ROOT_UID  0  /* don't change this, it really must be root */

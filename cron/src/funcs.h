@@ -32,7 +32,6 @@ void    set_cron_uid(void),
     sigpipe_func(void),
     job_add(const entry *),
     do_command(const entry *),
-    env_free(char **),
     unget_char(int, FILE *),
     free_entry(entry *),
     acquire_daemonlock(int);
@@ -41,9 +40,6 @@ int    job_runqueue(void),
     set_debug_flags(const char *),
     get_char(FILE *),
     get_string(char *, int, FILE *, char *),
-    swap_uids(void),
-    swap_uids_back(void),
-    load_env(FILE *),
     cron_pclose(FILE *),
     glue_strings(char *, size_t, const char *, const char *, char),
     strcmp_until(const char *, const char *, char),
@@ -52,17 +48,9 @@ int    job_runqueue(void),
     strdtb(char *),
     strcountstr(const char *, const char *);
 
-size_t    strlens(const char *, ...);
+char *mkprints(unsigned char *, unsigned int);
 
-char    *env_get(char *, char **),
-    *arpadate(time_t *),
-    *mkprints(unsigned char *, unsigned int),
-    *first_word(char *, char *),
-    **env_init(void),
-    **env_copy(char **),
-    **env_set(char **, char *);
-
-entry    *load_entry(FILE *, char **);
+entry    *load_entry(FILE *);
 
 FILE    *cron_popen(char *, char *, struct passwd *);
 

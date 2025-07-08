@@ -33,7 +33,7 @@ static  void
     quit(int);
 
 static  volatile sig_atomic_t  got_sighup, got_sigchld;
-static  int      timeRunning, virtualTime, clockTime;
+static  time_t    timeRunning, virtualTime, clockTime;
 static  long      GMToff;
 
 
@@ -61,10 +61,11 @@ int main(int argc, char *argv[]) {
   acquire_daemonlock(0);
   set_cron_uid();
 
-  database.entrypoint = NULL;
-  database.mtim = ts_zero;
   /* First load
    */
+  database.entrypoint = NULL;
+  database.mtim.tv_sec  = 0;
+  database.mtim.tv_nsec = 0;
   load_database(&database);
   set_time(TRUE);
   run_reboot_jobs(&database);
@@ -273,8 +274,7 @@ static void
 set_time(int initialize) {
   struct tm tm;
   static int isdst;
-
-  StartTime = time(NULL);
+  time_t StartTime = time(NULL);
 
   /* We adjust the time to GMT so we can catch DST changes. */
   tm = *localtime(&StartTime);

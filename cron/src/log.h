@@ -2,7 +2,7 @@
  * log.h
  */
 
-#define DEBUGGING  1
+#define DEBUGGING  0
 
 #if DEBUGGING
 # define Debug(mask, message) printf message;
