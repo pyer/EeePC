@@ -28,12 +28,12 @@ check_enabled_service() {
 }
 
 case "${action}" in
-  up)
+  start)
     check_enabled_service
     /usr/bin/printf "u" >/etc/svdir/enabled/${service}/supervise/control
     /usr/bin/cat /etc/svdir/enabled/${service}/supervise/stat
     ;;
-  down)
+  stop)
     check_enabled_service
     /usr/bin/printf "d" >/etc/svdir/enabled/${service}/supervise/control
     /usr/bin/cat /etc/svdir/enabled/${service}/supervise/stat
@@ -73,7 +73,7 @@ case "${action}" in
     ls -1 /etc/svdir/enabled | sort
     ;;
   *)
-    echo "Usage: sv <down | up | status | enable | disable> service"
+    echo "Usage: sv <status | start | stop | enable | disable> service"
     echo "   or: sv list"
     ;;
 esac
