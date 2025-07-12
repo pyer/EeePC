@@ -35,9 +35,12 @@ The other lines are optionnal and can be commands to run before and after
 the log rotation, or commands to delete old files, etc...
 
 .SS Example for a single log file
+.nf
 - /var/log/wtmp
+.fi
 
 .SS Example '/etc/rotatelog/srv' : config file for the service srv
+.nf
 # comment
 # stop the service
 /sbin/sv stop srv
@@ -45,11 +48,14 @@ the log rotation, or commands to delete old files, etc...
 \- /var/log/srv/debug.log
 #restart service
 /sbin/sv start srv
+.fi
 
 .SS Example '/etc/rotatelog/nginx' : config file for nginx
+.nf
 - /var/log/nginx/access.log
 - /var/log/nginx/error.log
 /bin/kill -USR1 `cat /run/nginx.pid`
+.fi
 
 .SH SEE ALSO
 
