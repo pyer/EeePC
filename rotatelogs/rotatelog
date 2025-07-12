@@ -1,0 +1,5 @@
+#!/bin/sh
+echo "Rotate $1"
+zipfile=$1_$(date +%Y%m%d_%H%M%S)
+mv $1 $zipfile
+/usr/bin/gzip -f $zipfile

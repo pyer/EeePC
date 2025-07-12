@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+echo "Test usage"
+./rotatelogs || echo " Ok"
+./rotatelogs help || echo " Ok"
+
+echo "Test config"
+./rotatelogs ./test.d >/dev/null; ret="$?"
+if [ "$ret" == "1" ]
+then
+  echo " Ok"
+else
+  echo " Failed"
+fi
+
+mkdir -p test.d
+chmod -r test.d
+./rotatelogs ./test.d >/dev/null; ret="$?"
+chmod +r test.d
+if [ "$ret" == "2" ]
+then
+  echo " Ok"
+else
+  echo " Failed"
+fi
+
+echo "Test rotate"
+echo "./rotatelog ./log/test1.log" >test.d/test1
+chmod +x test.d/test1
+echo "./rotatelog ./log/test2.log" >test.d/test2
+chmod +x test.d/test2
+mkdir -p log
+cp $0 log/test1.log
+cp $0 log/test2.log
+./rotatelogs ./test.d
+if [ -f log/test1.log ]
+then
+  echo " Failed"
+else
+  echo " Ok"
+fi
+if [ -f log/test2.log ]
+then
+  echo " Failed"
+else
+  echo " Ok"
+fi
+rm -r ./log
+rm -r ./test.d

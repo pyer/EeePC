@@ -36,6 +36,14 @@ install_cron:
 	sudo rm -rf /var/cron
 
 ####################
+install_rotatelogs:
+	sudo install -m 755 -s rotatelogs/rotatelogs /sbin/
+	sudo install -m 755 -s rotatelogs/rotatelog  /sbin/
+	sudo cp rotatelogs/rotatelogs.8 /usr/share/man/man8/
+	sudo cp -r rotatelogs/rotatelogs.d /etc/
+	sudo chmod +x /etc/rotatelogs.d/*
+
+####################
 init:
 	make -C init/src all
 

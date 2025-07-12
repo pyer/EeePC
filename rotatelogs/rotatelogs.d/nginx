@@ -1,0 +1,3 @@
+/sbin/rotatelog /var/log/nginx/access.log
+/sbin/rotatelog /var/log/nginx/error.log
+/bin/kill -USR1 `cat /run/nginx.pid`

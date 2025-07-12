@@ -1,0 +1,43 @@
+#!/bin/bash
+#
+# Variables
+# ---------
+# Config directory is usually "/etc/rotatelogs.d"
+CONFIG=$1
+
+# For cron
+PATH=/bin:/sbin
+
+# Functions
+# ---------
+
+usage() {
+  echo "Usage: $0 <config directory>"
+  exit 0
+}
+
+rotate() {
+  echo "Rotate $1"
+  $BEFORE
+  zipfile=$1_$(date +%Y%m%d_%H%M%S)
+  mv $1 $zipfile
+  gzip -f $zipfile
+  $AFTER
+}
+
+# Main
+# ----
+# Check argument
+[ "$CONFIG" == "" ] && usage
+[ "$CONFIG" == "help" ] && usage
+
+# Check config dir
+[ ! -d "$CONFIG" ] && echo "ERROR: $CONFIG is not a directory" && exit 1
+[ ! -r "$CONFIG" ] && echo "ERROR: can't read $CONFIG" && exit 2
+
+# Rotate logs defined in CONFIG
+for file in ${CONFIG}/*
+do
+  $file
+done
+exit 0
