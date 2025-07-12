@@ -12,17 +12,10 @@ PATH=/bin:/sbin
 # ---------
 
 usage() {
+  echo "Version 1.0.0"
+  echo
   echo "Usage: $0 <config directory>"
   exit 0
-}
-
-rotate() {
-  echo "Rotate $1"
-  $BEFORE
-  zipfile=$1_$(date +%Y%m%d_%H%M%S)
-  mv $1 $zipfile
-  gzip -f $zipfile
-  $AFTER
 }
 
 # Main
@@ -36,8 +29,10 @@ rotate() {
 [ ! -r "$CONFIG" ] && echo "ERROR: can't read $CONFIG" && exit 2
 
 # Rotate logs defined in CONFIG
+ln -s /etc/rotatelog "/sbin/-"
 for file in ${CONFIG}/*
 do
   $file
 done
+rm -f "/sbin/-"
 exit 0

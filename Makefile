@@ -30,18 +30,22 @@ cron:
 install_cron:
 	sudo install -m 755 -s cron/src/cron /sbin/
 	sudo cp cron/man/bitstring.3 /usr/share/man/man3/
+	sudo gzip -f /usr/share/man/man3/bitstring.3 
 	sudo cp cron/man/cron.8      /usr/share/man/man8/
+	sudo gzip -f /usr/share/man/man8/cron.8
 	sudo cp cron/man/crontab.5   /usr/share/man/man5/
+	sudo gzip -f /usr/share/man/man5/crontab.5
 	sudo rm -rf /etc/cron.*
 	sudo rm -rf /var/cron
 
 ####################
-install_rotatelogs:
-	sudo install -m 755 -s rotatelogs/rotatelogs /sbin/
-	sudo install -m 755 -s rotatelogs/rotatelog  /sbin/
-	sudo cp rotatelogs/rotatelogs.8 /usr/share/man/man8/
-	sudo cp -r rotatelogs/rotatelogs.d /etc/
-	sudo chmod +x /etc/rotatelogs.d/*
+install_rotatelog:
+	sudo install -m 755 rotatelog/rotatelog /sbin/
+	sudo cp rotatelog/man/rotatelog.8 /usr/share/man/man8/
+	sudo gzip -f /usr/share/man/man8/rotatelog.8
+	sudo cp -r rotatelog/etc/* /etc/
+	sudo chmod +x /etc/rotatelog
+	sudo chmod +x /etc/rotatelog.d/*
 
 ####################
 init:

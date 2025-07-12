@@ -1,0 +1,63 @@
+'\" t
+.TH ROTATELOG 8 "1.0.0" "Linux" "System Administrator's Manual"
+
+.SH NAME
+rotatelogs \- rotates and compresses system logs
+
+.SH SYNOPSIS
+.B rotatelogs <config dir>
+
+.SH DESCRIPTION
+
+.I rotatelog
+is designed to ease administration of systems that generate
+large numbers of log files.
+It allows automatic rotation, compression, and removal of log files.
+.P
+<config dir> is usually '/etc/rotatelog.d' and contains some config files.
+A config file is a list of files to rotate and optional shell commands.
+.P
+If no command line arguments are given,
+.I rotatelog
+will print version and a short usage summary.
+.P
+Normally,
+.I rotatelog
+is run as a cron job.  It can be run manually by root user.
+The crontab defined the frequency of the rotations.
+For example, '/etc/rotatelog.daily' and '/etc/rotatelog.weekly'
+can be 2 different <config dir> for 2 cron jobs. 
+
+.SS Format of config file
+A config file is a shell script plus special lines beginning with '\-'.
+These lines are the list of log files to rotate.
+The other lines are optionnal and can be commands to run before and after
+the log rotation, or commands to delete old files, etc...
+
+.SS Example for a single log file
+- /var/log/wtmp
+
+.SS Example '/etc/rotatelog/srv' : config file for the service srv
+# comment
+# stop the service
+/sbin/sv stop srv
+# rotate some log files
+\- /var/log/srv/debug.log
+#restart service
+/sbin/sv start srv
+
+.SS Example '/etc/rotatelog/nginx' : config file for nginx
+- /var/log/nginx/access.log
+- /var/log/nginx/error.log
+/bin/kill -USR1 `cat /run/nginx.pid`
+
+.SH SEE ALSO
+
+.BR cron (8),
+.BR gzip (1),
+.BR gunzip (1),
+
+.SH AUTHOR
+.nf
+Pierre Bazonnard
+.fi
