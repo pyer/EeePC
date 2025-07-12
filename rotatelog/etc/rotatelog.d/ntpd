@@ -1,0 +1,3 @@
+/sbin/sv stop ntpd
+- /var/log/ntpd.log
+/sbin/sv start ntpd
