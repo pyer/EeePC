@@ -32,7 +32,7 @@ chmod +x test.d/test2
 mkdir -p log
 cp $0 log/test1.log
 cp $0 log/test2.log
-rotatelog ./test.d
+sudo rotatelog ./test.d
 if [ -f log/test1.log ]
 then
   echo " Failed"
