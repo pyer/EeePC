@@ -67,6 +67,7 @@ install_init:
 install_services:
 	sudo cp -r init/etc/* /etc/
 	sudo mkdir -p /etc/svdir/enabled
+	sudo sv enable cron
 	sudo sv enable dhcpd
 	sudo sv enable ntpd
 	sudo sv enable sshd
