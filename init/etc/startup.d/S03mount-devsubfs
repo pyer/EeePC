@@ -1,14 +1,15 @@
 #! /bin/sh
+# This script gets called multiple times during boot, so must be idempotent.
+#
 PATH=/sbin:/bin
 # $1: Mount mode, to allow for remounting
 MNTMODE="mount_noupdate"
 [ "$1" = "reload" ] && MNTMODE="remount"
-#
-# This script gets called multiple times during boot, so must be idempotent.
-#
+
+# GID of the `tty' group
 TTYGRP=5
-TTYMODE=620
-[ -f /etc/default/devpts ] && . /etc/default/devpts
+# Set to 620 to have `mesg y' be the default
+TTYMODE=600
 
 . /etc/mount-functions.sh
 
