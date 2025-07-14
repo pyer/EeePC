@@ -1,5 +1,3 @@
 #!/bin/sh
-echo "Setting up keyboard"
-[ -f /etc/default/keyboard ] && . /etc/default/keyboard
-[ -z $XKBLAYOUT ] && XKBLAYOUT="fr"
-/usr/bin/loadkeys $XKBLAYOUT
+echo "Setting up keyboard: french layout"
+/usr/bin/loadkeys fr
