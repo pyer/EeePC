@@ -1,12 +1,6 @@
 #! /bin/sh
 PATH=/sbin:/bin
 
-# for ntfs-3g to get correct file name encoding
-if [ -r /etc/default/locale ]; then
-	. /etc/default/locale
-	export LANG
-fi
-
 . /etc/mount-functions.sh
 
 	#

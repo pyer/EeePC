@@ -1,5 +1,8 @@
 #!/bin/sh
-PATH=/sbin:/usr/sbin:/bin:/usr/bin
-for script in /etc/startup.d/S* ; do
+export PATH=/sbin:/bin
+export LANG=en_US.UTF-8
+
+for script in /etc/startup.d/S*
+do
   "$script" start
 done
