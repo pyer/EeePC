@@ -1,18 +1,15 @@
 #!/bin/sh -e
 PATH=/sbin:/bin
 
+CONFIGURE_INTERFACES=yes
+EXCLUDE_INTERFACES=
+
 [ -x /sbin/ifup ] || exit 0
 [ -x /sbin/ifdown ] || exit 0
 
-CONFIGURE_INTERFACES=yes
-EXCLUDE_INTERFACES=
-VERBOSE=no
-
-[ -f /etc/default/networking ] && . /etc/default/networking
-
-if [ "$CONFIGURE_INTERFACES" = no ]
+if [ "$CONFIGURE_INTERFACES" = "no" ]
 then
-  echo "Not configuring network interfaces, see /etc/default/networking"
+  echo "Configuring network interfaces is disabled"
   exit 0
 fi
 
@@ -24,9 +21,6 @@ do
   exclusions="-X $iface $exclusions"
 done
 
-verbose=""
-[ "$VERBOSE" = yes ] && verbose=-v
-
 if [ -x /bin/udevadm ]; then
   /bin/udevadm settle
 fi
@@ -34,11 +28,11 @@ fi
 echo "Configuring auto interfaces"
 for iface in $(ifquery --list --allow=auto $exclusions)
 do
-  ifup $verbose $iface
+  ifup $iface
 done
 
 echo "Configuring hotplug interfaces"
 for iface in $(ifquery --list --allow=hotplug $exclusions)
 do
-  ifup $verbose $iface
+  ifup $iface
 done

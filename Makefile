@@ -76,7 +76,8 @@ install_services:
 	sudo sv enable tty3
 	sudo sv enable tty4
 
-install_etc:
-	sudo cp -r etc/* /etc/
+####################
+install_network:
+	sudo cp -r network/* /etc/
 
 ####################
