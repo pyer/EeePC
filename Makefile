@@ -14,16 +14,9 @@ clean:
 	find ./ -name "*~" -delete
 
 ####################
-#build:
-#	@echo "Build $(lastword $(MAKECMDGOALS))"
-
-uninstall_packages:
-
-####################
 cron:
+	@echo "Build cron"
 	make -C cron/src
-
-install_cron:
 	@echo "Uninstall rotatelog and cron"
 	sudo dpkg --purge logrotate
 	sudo dpkg --purge anacron
@@ -49,9 +42,9 @@ install_cron:
 
 ####################
 init:
+	@echo "Build init"
 	make -C init/src all
-
-install_init:
+	@echo "Install init"
 	sudo rm -f /bin/sv /bin/runsv /bin/runsvdir
 	sudo rm -f /sbin/run*
 	sudo rm -f /sbin/init
@@ -66,7 +59,7 @@ install_init:
 	sudo ln -s /sbin/init /sbin/poweroff
 	sudo ln -s /sbin/init /sbin/reboot
 
-install_services:
+services:
 	sudo cp -r init/etc/* /etc/
 	sudo mkdir -p /etc/svdir/enabled
 	sudo sv enable cron
@@ -79,16 +72,19 @@ install_services:
 	sudo sv enable tty4
 
 ####################
-install_network:
+network:
 	sudo rm    /etc/resolv.conf
 	sudo rm -r /etc/resolvconf
 	sudo cp -r network/* /etc/
 
 ####################
-install_system:
+system:
 	sudo cp system/timezone /etc/timezone
 	sudo rm -f /etc/localtime
 	sudo ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime
+	sudo apt install -y isc-dhcp-server
+	sudo apt install -y ntp
+	sudo apt install -y ssh
 	sudo updatedb
 
 ####################
@@ -98,6 +94,5 @@ clean_system:
 	sudo rm -rf /etc/init.d
 	sudo rm -rf /etc/runit*
 	sudo rm -rf /etc/systemd
-
 
 ####################
