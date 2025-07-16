@@ -18,22 +18,18 @@ clean:
 #	@echo "Build $(lastword $(MAKECMDGOALS))"
 
 uninstall_packages:
-	sudo apt purge runit-services-net-antix
-	sudo apt purge runit-full-core-services-antix
-	sudo apt purge runit-core-services-antix
-	sudo apt purge runit-init-antix
-	sudo apt purge runit-antix
-	sudo apt purge runit-helper
 
 ####################
 cron:
 	make -C cron/src
 
 install_cron:
+	@echo "Uninstall rotatelog and cron"
 	sudo dpkg --purge logrotate
 	sudo dpkg --purge anacron
 	sudo dpkg --purge cron
 	sudo dpkg --purge cron-daemon-common
+	@echo "Install cron"
 	sudo install -m 755 -s cron/src/cron /sbin/
 	sudo cp cron/man/bitstring.3 /usr/share/man/man3/
 	sudo gzip -f /usr/share/man/man3/bitstring.3 
@@ -43,9 +39,7 @@ install_cron:
 	sudo gzip -f /usr/share/man/man5/crontab.5
 	sudo rm -rf /etc/cron.*
 	sudo rm -rf /var/cron
-
-####################
-install_rotatelog:
+	@echo "Install rotatelog"
 	sudo install -m 755 rotatelog/rotatelog /sbin/
 	sudo cp rotatelog/man/rotatelog.8 /usr/share/man/man8/
 	sudo gzip -f /usr/share/man/man8/rotatelog.8
@@ -94,5 +88,14 @@ install_network:
 install_system:
 	sudo cp system/timezone /etc/timezone
 	sudo updatedb
+
+####################
+clean_system:
+	sudo rm -rf /etc/sv
+	sudo rm -rf /etc/rc*
+	sudo rm -rf /etc/init.d
+	sudo rm -rf /etc/runit*
+	sudo rm -rf /etc/systemd
+
 
 ####################
