@@ -58,8 +58,7 @@ init:
 	make -C init/src all
 
 install_init:
-	sudo rm -f /bin/sv
-	sudo rm -f /bin/run*
+	sudo rm -f /bin/sv /bin/runsv /bin/runsvdir
 	sudo rm -f /sbin/run*
 	sudo rm -f /sbin/init
 	sudo install -m 755 init/src/init     /sbin
@@ -93,6 +92,7 @@ install_network:
 
 ####################
 install_system:
-	sudo echo "Europe/Paris" >/etc/timezone
+	sudo cp system/timezone /etc/timezone
+	sudo updatedb
 
 ####################
