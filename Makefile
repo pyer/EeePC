@@ -18,16 +18,22 @@ clean:
 #	@echo "Build $(lastword $(MAKECMDGOALS))"
 
 uninstall_packages:
-	sudo dpkg --purge logrotate
-	sudo dpkg --purge anacron
-	sudo dpkg --purge cron
-	sudo dpkg --purge cron-daemon-common
+	sudo apt purge runit-services-net-antix
+	sudo apt purge runit-full-core-services-antix
+	sudo apt purge runit-core-services-antix
+	sudo apt purge runit-init-antix
+	sudo apt purge runit-antix
+	sudo apt purge runit-helper
 
 ####################
 cron:
 	make -C cron/src
 
 install_cron:
+	sudo dpkg --purge logrotate
+	sudo dpkg --purge anacron
+	sudo dpkg --purge cron
+	sudo dpkg --purge cron-daemon-common
 	sudo install -m 755 -s cron/src/cron /sbin/
 	sudo cp cron/man/bitstring.3 /usr/share/man/man3/
 	sudo gzip -f /usr/share/man/man3/bitstring.3 
@@ -52,6 +58,9 @@ init:
 	make -C init/src all
 
 install_init:
+	sudo rm -f /bin/sv
+	sudo rm -f /bin/run*
+	sudo rm -f /sbin/run*
 	sudo rm -f /sbin/init
 	sudo install -m 755 init/src/init     /sbin
 	sudo install -m 755 init/src/logon    /sbin
@@ -78,6 +87,12 @@ install_services:
 
 ####################
 install_network:
+	sudo rm    /etc/resolv.conf
+	sudo rm -r /etc/resolvconf
 	sudo cp -r network/* /etc/
+
+####################
+install_system:
+	sudo echo "Europe/Paris" >/etc/timezone
 
 ####################
