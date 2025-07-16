@@ -79,6 +79,8 @@ network:
 
 ####################
 system:
+	cp system/bashrc.pierre /home/pierre/.bashrc
+	sudo cp system/bashrc.root /root/.bashrc
 	sudo cp system/timezone /etc/timezone
 	sudo rm -f /etc/localtime
 	sudo ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime
