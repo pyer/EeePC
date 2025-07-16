@@ -1,5 +1,5 @@
 #
-.PHONY: clean cron init
+.PHONY: clean cron init services network system clean_system
 
 ####################
 help:
