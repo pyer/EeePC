@@ -1,0 +1,10 @@
+#!/bin/sh
+
+echo "Setting up clock"
+# We only want to use the system timezone or else we'll get
+# potential inconsistency at startup.
+unset TZ
+
+# Copies Hardware Clock time to System Clock using the correct timezone
+# for hardware clocks in local time, and sets kernel timezone.
+/sbin/hwclock --rtc=/dev/rtc0 --hctosys

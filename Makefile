@@ -87,6 +87,8 @@ install_network:
 ####################
 install_system:
 	sudo cp system/timezone /etc/timezone
+	sudo rm -f /etc/localtime
+	sudo ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime
 	sudo updatedb
 
 ####################
