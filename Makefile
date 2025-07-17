@@ -88,6 +88,7 @@ config:
 	sudo cp config/timezone /etc/timezone
 	sudo rm -f /etc/localtime
 	sudo ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime
+	sudo cp config/motd /etc/
 
 ####################
 system:
