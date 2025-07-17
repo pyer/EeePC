@@ -1,5 +1,5 @@
 #
-.PHONY: clean cron init services network system clean_system
+.PHONY: clean cron init services network config system clean_system
 
 ####################
 help:
@@ -89,6 +89,7 @@ config:
 	sudo rm -f /etc/localtime
 	sudo ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime
 
+####################
 system:
 	sudo apt install -y isc-dhcp-server
 	sudo apt install -y ntp
