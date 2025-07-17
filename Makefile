@@ -98,6 +98,11 @@ system:
 	sudo updatedb
 
 ####################
+remove_packages:
+	sudo dpkg --purge ufw
+	sudo rm -rf /etc/ufw
+
+####################
 clean_system:
 	sudo rm -rf /etc/sv
 	sudo rm -rf /etc/rc*
