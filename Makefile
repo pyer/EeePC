@@ -78,12 +78,18 @@ network:
 	sudo cp -r network/* /etc/
 
 ####################
-system:
-	cp system/bashrc.pierre /home/pierre/.bashrc
-	sudo cp system/bashrc.root /root/.bashrc
-	sudo cp system/timezone /etc/timezone
+config:
+	mkdir -p /home/pierre/.ssh
+	chmod 700 /home/pierre/.ssh
+	cp config/authorized_keys /home/pierre/.ssh/
+	chmod 600 /home/pierre/.ssh/authorized_keys
+	cp config/bashrc.pierre /home/pierre/.bashrc
+	sudo cp config/bashrc.root /root/.bashrc
+	sudo cp config/timezone /etc/timezone
 	sudo rm -f /etc/localtime
 	sudo ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime
+
+system:
 	sudo apt install -y isc-dhcp-server
 	sudo apt install -y ntp
 	sudo apt install -y ssh
