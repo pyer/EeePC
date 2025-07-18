@@ -1,0 +1,3 @@
+#! /bin/sh
+echo "Setting kernel variables"
+/sbin/sysctl -q --system

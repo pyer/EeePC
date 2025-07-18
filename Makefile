@@ -32,6 +32,7 @@ cron:
 	sudo gzip -f /usr/share/man/man5/crontab.5
 	sudo rm -rf /etc/cron.*
 	sudo rm -rf /var/cron
+	sudo sv enable cron
 	@echo "Install rotatelog"
 	sudo install -m 755 rotatelog/rotatelog /sbin/
 	sudo cp rotatelog/man/rotatelog.8 /usr/share/man/man8/
@@ -62,7 +63,6 @@ init:
 services:
 	sudo cp -r init/etc/* /etc/
 	sudo mkdir -p /etc/svdir/enabled
-	sudo sv enable cron
 	sudo sv enable dhcpd
 	sudo sv enable ntpd
 	sudo sv enable sshd
@@ -109,5 +109,9 @@ clean_system:
 	sudo rm -rf /etc/init.d
 	sudo rm -rf /etc/runit*
 	sudo rm -rf /etc/systemd
+	sudo rm -rf /var/log/fsck
+	sudo rm -rf /var/log/private
+	sudo rm -rf /var/log/runit
+	sudo rm -rf /var/log/samba
 
 ####################

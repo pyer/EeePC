@@ -1,10 +1,93 @@
-#! /bin/sh
+#!/bin/sh
 # Include /usr/bin in path to find on_ac_power if /usr/ is on the root partition.
 PATH=/usr/bin:/sbin:/bin
-FSCK_LOGFILE=/var/log/fsck/checkfs
+FSCK_LOGFILE=/var/log/fsck.log
 
-# Trap SIGINT so that we can handle user interupt of fsck.
+. /etc/mount-functions.sh
+
+# Trap SIGINT so that we can handle user interrupt of fsck.
 trap "" INT
+
+read_fstab
+#
+# Does the root device in /etc/fstab match with the actual device ?
+# If not we try to use the /dev/root alias device, and if that
+# fails we create a temporary node in /run.
+#
+ddev="$(mountpoint -qx $rootdev)"
+rdev="$(mountpoint -d /)"
+if [ "$ddev" != "$rdev" ] && [ "$ddev" != "4:0" ]
+then
+      if rm -f /run/rootdev \
+          && mknod -m 600 /run/rootdev b ${rdev%:*} ${rdev#*:} \
+          && [ -e /run/rootdev ]
+      then
+        rootdev=/run/rootdev
+      else
+        echo "ERROR: The device node $rootdev for the root filesystem is missing or incorrect 
+or there is no entry for the root filesystem listed in /etc/fstab. 
+The system is also unable to create a temporary node in /run. 
+This means you have to fix the problem manually."
+        halt
+      fi
+fi
+
+#
+# Ensure that root is quiescent and read-only before fsck'ing.
+#
+# mount -n -o remount,ro / would be the correct syntax but
+# mount can get confused when there is a "bind" mount defined
+# in fstab that bind-mounts "/" somewhere else.
+#
+# So we use mount -n -o remount,ro $rootdev / but that can
+# fail on older kernels on sparc64/alpha architectures due
+# to a bug in sys_mount().
+#
+# As a compromise we try both.
+#
+if \
+    ! mount    -n -o remount,ro              $rootdev /              \
+    && ! mount -n -o remount,ro -t dummytype $rootdev /  2>/dev/null \
+    && ! mount -n -o remount,ro                       /  2>/dev/null
+then
+    echo "ERROR: Cannot check root file system because it is not mounted read-only."
+else
+  # The actual checking is done here.
+  # Only ext* file systems support `-f' option to fsck. See #686895
+  echo "Checking root file system"
+  fsck -C -p -T -t $roottype $rootdev
+  echo "Status: $?"
+fi
+#
+# Remount root to final mode (rw or ro).
+#
+# See the comments above at the previous "mount -o remount"
+# for an explanation why we try this twice.
+#
+if ! mount -n -o remount,$rootopts,$rootmode $fstabroot / 2>/dev/null
+then
+  mount -n -o remount,$rootopts,$rootmode /
+fi
+
+# If possible, migrate /etc/mtab to be a symlink to /proc/mounts.
+# Note that not all systems e.g. Hurd currently
+# support this.
+if [ "$rootmode" != "ro" ]; then
+  # Don't symlink if /proc/mounts does not exist.
+  if [ -r "/proc/mounts" ]; then
+    rm -f "/etc/mtab"
+    ln -fs "/proc/mounts" "/etc/mtab"
+  fi
+fi
+
+# Remove /run/rootdev if we created it.
+rm -f /run/rootdev
+
+# Update mount options for mounts created in early boot
+# S01mountkernfs.sh
+/etc/startup.d/S01mount-kernelfs reload
+# S03mountdevsubfs.sh
+/etc/startup.d/S03mount-devsubfs reload
 
 # Check the rest of the file systems.
 echo "Checking file systems"
