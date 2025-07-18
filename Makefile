@@ -109,6 +109,7 @@ clean_system:
 	sudo rm -rf /etc/init.d
 	sudo rm -rf /etc/runit*
 	sudo rm -rf /etc/systemd
+	sudo rm -f /etc/slimski.local.conf
 	sudo rm -rf /var/log/fsck
 	sudo rm -rf /var/log/private
 	sudo rm -rf /var/log/runit
