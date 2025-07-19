@@ -18,13 +18,13 @@ if [ -f "$fstab" ]; then
         DEV="$(findfs $DEV)"
         ;;
       esac
-      case "MTPT" in
-	none)
-	  # skip swap partition
-	  continue
-	;;
+      case "$MTPT" in
+        none)
+          # skip swap partition
+          continue
+        ;;
         /)
-	  # check root fs
+          # check root fs
           if [ "$PASS" = "1" ]
           then
             if mount -n -o remount,ro $DEV $MTPT
@@ -34,13 +34,13 @@ if [ -f "$fstab" ]; then
               fsck -C -p -T -t $FSTYPE $DEV
               # Remount root to final mode rw
               mount -n -o remount,$OPTS $DEV $MTPT
-	    else
+            else
               echo "ERROR: Cannot check root file system because it is not mounted read-only."
-	    fi
+            fi
           fi
-	;;
+        ;;
         *)
-	  # check other fs
+          # check other fs
           if [ "$PASS" != "0" ]
           then
             if mountpoint -q "$MTPT"
