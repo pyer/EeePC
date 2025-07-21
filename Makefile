@@ -95,6 +95,9 @@ config:
 
 ####################
 system:
+	sudo mkdir -p /usr/share/fonts/psf
+	sudo cp /usr/share/consolefonts/Uni*psf.gz /usr/share/fonts/psf/
+	sudo apt install -y iptables
 	sudo apt install -y isc-dhcp-server
 	sudo apt install -y ntp
 	sudo apt install -y ssh
@@ -102,8 +105,13 @@ system:
 
 ####################
 remove_packages:
-	sudo dpkg --purge ufw
-	sudo rm -rf /etc/ufw
+	sudo apt purge -y ufw
+	sudo apt purge -y x11-common
+	sudo apt purge -y libx11-6
+	sudo apt purge -y libx11-data
+	sudo apt purge -y libx11-6
+	sudo apt purge -y xkb-data
+	sudo apt autoremove
 
 ####################
 clean_system:
@@ -117,5 +125,7 @@ clean_system:
 	sudo rm -rf /var/log/private
 	sudo rm -rf /var/log/runit
 	sudo rm -rf /var/log/samba
+	sudo rm -rf /etc/ufw
+	sudo rm -rf /etc/X11
 
 ####################

@@ -9,7 +9,7 @@ FONTFACE="TerminusBold"
 FONTSIZE="18x10"
 
 echo "Setting up console font ${CODESET}-${FONTFACE}${FONTSIZE}"
-font="/usr/share/consolefonts/${CODESET}-${FONTFACE}${FONTSIZE}.psf.gz"
+font="/usr/share/fonts/psf/${CODESET}-${FONTFACE}${FONTSIZE}.psf.gz"
 if [ -f "$font" ]; then
     for tty in $ACTIVE_CONSOLES; do
         setfont -C $tty $font
