@@ -32,6 +32,7 @@ cron:
 	sudo gzip -f /usr/share/man/man5/crontab.5
 	sudo rm -rf /etc/cron.*
 	sudo rm -rf /var/cron
+	sudo cp cron/etc/crontab /etc/crontab
 	sudo sv enable cron
 	@echo "Install rotatelog"
 	sudo install -m 755 rotatelog/rotatelog /sbin/

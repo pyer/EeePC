@@ -5,6 +5,8 @@ init/src/runsv
 init/src/runsvdir
 init/src/utmpset
 
+cron/src/cron
+
 # Temporary files
 *~
 
