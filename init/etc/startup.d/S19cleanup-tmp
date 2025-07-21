@@ -1,8 +1,0 @@
-#!/bin/sh
-echo "Cleaning up temporary files..."
-# Remove bootclean's flag files.
-# Don't run bootclean again after this!
-/usr/bin/rm -f /tmp/.clean /run/.clean /run/lock/.clean
-/usr/bin/rm -f /tmp/.tmpfs /run/.tmpfs /run/lock/.tmpfs
-# Remove /tmp content
-/usr/bin/rm -rf /tmp/*

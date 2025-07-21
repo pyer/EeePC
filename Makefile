@@ -61,6 +61,8 @@ init:
 	sudo ln -s /sbin/init /sbin/reboot
 
 services:
+	sudo rm -rf /etc/startup.d
+	sudo rm -rf /etc/shutdown.d
 	sudo cp -r init/etc/* /etc/
 	sudo mkdir -p /etc/svdir/enabled
 	sudo sv enable dhcpd

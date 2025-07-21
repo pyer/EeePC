@@ -1,0 +1,44 @@
+#! /bin/sh
+PATH=/sbin:/bin
+echo "Mounting file systems"
+
+# Mount tmpfs on /run
+# /run size is 10% of free memory
+# /run is already mounted
+#mount -t tmpfs -o "nosuid,nodev,noexec,mode=0755,size=10%" tmpfs /run
+# Make pidfile omit directory for sendsigs
+[ -d /run/sendsigs.omit.d ] || mkdir --mode=755 /run/sendsigs.omit.d/
+# Make lock directory
+[ -d /run/lock ] || mkdir --mode=1755 /run/lock
+# Make shm directory
+[ -d /run/shm ]  || mkdir --mode=755 /run/shm
+
+# Mount tmpfs on /tmp
+# /tmp size is 20% of free memory
+mount -t tmpfs -o "nosuid,nodev,mode=0777,size=20%" tmpfs /tmp
+
+# Mount proc filesystem on /proc
+# /proc is already mounted
+#mount -t proc -o "nosuid,nodev,noexec" proc /proc
+
+# Mount sys directories
+# /sys is already mounted
+#mount -t sysfs -o "nosuid,nodev,noexec" sysfs /sys
+#
+[ -d /sys/fs/pstore ] && mount -t pstore -o "nosuid,nodev,noexec" pstore /sys/fs/pstore
+[ -d /sys/kernel/security ] && mount -t securityfs -o "nosuid,nodev,noexec" securityfs /sys/kernel/security
+
+# Mount efivarfs on /sys/firmware/efi/efivars if necessary
+if [ -x /sys/firmware/efi ] && ! grep -sq ^efivarfs /proc/self/mounts; then
+  # check efivarfs already mounted by kernel
+  if ls /sys/firmware/efi/efivars/* 1>/dev/null 2>&1 || \
+     ls /sys/firmware/efi/vars/* 1>/dev/null 2>&1; then
+    return
+  fi
+  efivarsmnt=/sys/firmware/efi/efivars
+  if [ -d $efivarsmnt ]; then
+    # mount following mxlinux's efimount
+    echo "Mounting efivarfs to $efivarsmnt"
+    mount -t efivarfs efivarfs $efivarsmnt
+  fi
+fi
