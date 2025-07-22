@@ -95,23 +95,26 @@ config:
 
 ####################
 system:
-	sudo mkdir -p /usr/share/fonts/psf
-	sudo cp /usr/share/consolefonts/Uni*psf.gz /usr/share/fonts/psf/
+	# sudo mkdir -p /usr/share/fonts/psf
+	# sudo cp /usr/share/consolefonts/Uni*psf.gz /usr/share/fonts/psf/
 	sudo apt install -y iptables
 	sudo apt install -y isc-dhcp-server
+	sudo touch /var/lib/dhcp/dhcpd.leases
 	sudo apt install -y ntp
 	sudo apt install -y ssh
 	sudo updatedb
 
 ####################
 remove_packages:
+	sudo mkdir -p /usr/share/fonts/psf
+	sudo cp /usr/share/consolefonts/Uni*psf.gz /usr/share/fonts/psf/
 	sudo apt purge -y ufw
 	sudo apt purge -y x11-common
 	sudo apt purge -y libx11-6
 	sudo apt purge -y libx11-data
 	sudo apt purge -y libx11-6
 	sudo apt purge -y xkb-data
-	sudo apt autoremove
+	sudo apt autoremove -y
 
 ####################
 clean_system:
@@ -119,8 +122,9 @@ clean_system:
 	sudo rm -rf /etc/rc*
 	sudo rm -rf /etc/init.d
 	sudo rm -rf /etc/runit*
+	sudo rm -f  /etc/service
 	sudo rm -rf /etc/systemd
-	sudo rm -f /etc/slimski.local.conf
+	sudo rm -f  /etc/slimski.local.conf
 	sudo rm -rf /var/log/fsck
 	sudo rm -rf /var/log/private
 	sudo rm -rf /var/log/runit
