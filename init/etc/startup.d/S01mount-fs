@@ -1,6 +1,9 @@
 #! /bin/sh
 PATH=/sbin:/bin
 echo "Mounting file systems"
+# Remount / rw
+BOOT=$(findmnt -r -n / |cut -d ' ' -f2)
+mount -o remount,rw $BOOT /
 
 # Mount tmpfs on /run
 # /run size is 10% of free memory
