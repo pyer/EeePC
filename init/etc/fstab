@@ -1,4 +1,0 @@
-# Pluggable devices are handled by uDev, they are not in fstab
-UUID=343281d6-64a7-458e-84ba-92505241878e /    ext4 defaults,relatime 0 1
-UUID=e8bb8663-9274-437e-8649-41c74217b96c none swap defaults          0 0
-UUID=986ba077-e30d-4b55-8187-f30250d20918 /opt ext4 defaults,relatime 0 1
