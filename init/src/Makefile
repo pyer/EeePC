@@ -6,11 +6,12 @@ OPTIONS=-O2 -Wall -c
 ####################
 
 default: all
-all: init runsv runsvdir utmpset logon
+all: init runsv utmpset logon
 
 ####################
 
-init: init.o log.a sig.a str.a wait.a
+#init: init.o log.a sig.a str.a wait.a
+init: init.o log.a sig.a str.a time.a wait.a
 	gcc -s -o $@ $^
 	#gcc -s -o $@ $^ -static
 
@@ -18,11 +19,6 @@ init: init.o log.a sig.a str.a wait.a
 runsv: runsv.o log.a sig.a str.a time.a wait.a
 	gcc -s -o $@ $^
 
-#runsvdir: runsvdir.o unix.a byte.a time.a
-runsvdir: runsvdir.o log.a sig.a str.a time.a wait.a
-	gcc -s -o $@ $^
-
-#utmpset: utmpset.o unix.a byte.a
 utmpset: utmpset.o log.a str.a
 	gcc -s -o $@ $^
 
@@ -38,9 +34,6 @@ init.o: init.c
 	gcc $(OPTIONS) -o $@ $<
 
 runsv.o: runsv.c
-	gcc $(OPTIONS) -o $@ $<
-
-runsvdir.o: runsvdir.c
 	gcc $(OPTIONS) -o $@ $<
 
 utmpset.o: utmpset.c
@@ -174,4 +167,4 @@ clean:
 	rm -f *~
 
 cleaner: clean
-	rm -f init runsv runsvdir utmpset logon
+	rm -f init runsv utmpset logon

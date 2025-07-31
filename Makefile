@@ -47,12 +47,11 @@ init:
 	@echo "Build init"
 	make -C init/src all
 	@echo "Install init"
-	sudo rm -f /bin/sv /bin/runsv /bin/runsvdir
+	sudo rm -f /bin/sv /bin/runsv
 	sudo rm -f /sbin/run*
 	sudo rm -f /sbin/init
 	sudo install -m 755 init/src/init     /sbin
 	sudo install -m 755 init/src/logon    /sbin
-	sudo install -m 755 init/src/runsvdir /sbin
 	sudo install -m 755 init/src/runsv    /sbin
 	sudo install -m 755 init/src/utmpset  /sbin
 	sudo install -m 755 init/sv           /sbin
@@ -114,6 +113,9 @@ remove_packages:
 	sudo apt purge -y libx11-data
 	sudo apt purge -y libx11-6
 	sudo apt purge -y xkb-data
+	#sudo apt purge -y init-system-helpers
+	#sudo apt purge -y runit-init-antix
+	#sudo apt purge -y sysvinit-utils-antix
 	sudo apt autoremove -y
 
 ####################

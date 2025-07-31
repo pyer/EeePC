@@ -271,9 +271,9 @@ void startservice(struct svdir *s) {
   }
   if (p == 0) {
     /* child */
-    sig_uncatch(SIGCHLD);
+    sig_default(SIGCHLD);
     sig_unblock(SIGCHLD);
-    sig_uncatch(SIGTERM);
+    sig_default(SIGTERM);
     sig_unblock(SIGTERM);
     execve(*run, run, environ);
     fatal("unable to start ", *run);
