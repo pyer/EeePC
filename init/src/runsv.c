@@ -40,9 +40,7 @@ struct svdir {
   int want;
   time_t start;
   int wstat;
-  int fdlock;
   int fdcontrol;
-  int fdcontrolwrite;
 };
 struct svdir svd[2];
 
@@ -360,11 +358,6 @@ int main(int argc, char *argv[], char * const *envp) {
         fatal("unable to readlink ./supervise", 0);
     }
   }
-  if ((svd[0].fdlock = open("supervise/lock", O_WRONLY | O_NONBLOCK | O_APPEND | O_CREAT, 0600)) == -1)
-    fatal("unable to open supervise/lock", 0);
-  if (flock(svd[0].fdlock,LOCK_EX | LOCK_NB) == -1)
-    fatal("unable to lock supervise/lock", 0);
-  fcntl(svd[0].fdlock, F_SETFD, 1);
 
   mkfifo("supervise/control", 0600);
   if (stat("supervise/control", &s) == -1)
@@ -374,16 +367,7 @@ int main(int argc, char *argv[], char * const *envp) {
   if ((svd[0].fdcontrol = open("supervise/control", O_RDONLY | O_NONBLOCK)) == -1)
     fatal("unable to open supervise/control", 0);
   fcntl(svd[0].fdcontrol, F_SETFD, 1);
-
-  if ((svd[0].fdcontrolwrite = open("supervise/control", O_WRONLY | O_NONBLOCK)) == -1)
-    fatal("unable to open supervise/control", 0);
-  fcntl(svd[0].fdcontrolwrite, F_SETFD, 1);
   update_status(&svd[0]);
-
-  mkfifo("supervise/ok",0600);
-  if ((fd = open("supervise/ok", O_RDONLY | O_NONBLOCK)) == -1)
-    fatal("unable to read supervise/ok", 0);
-  fcntl(fd, F_SETFD, 1);
 
   for (;;) {
     struct pollfd x[3];
