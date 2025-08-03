@@ -46,12 +46,12 @@ int sigi = 0;
  * signal handlers
  */
 void sig_cont_handler(void) {
-  log_info(LOG_PREFIX, "SIGCONT\n", 0);
+  //log_info(LOG_PREFIX, "SIGCONT\n", 0);
   sigc++;
 }
 
 void sig_int_handler(void) {
-  log_info(LOG_PREFIX, "SIGINT\n", 0);
+  //log_info(LOG_PREFIX, "SIGINT\n", 0);
   sigi++;
 }
 
@@ -290,7 +290,7 @@ void execute(char *action, char * const *envp)
     int wstat;
     int ttyfd;
     const char * prog[2];
-    log_info(LOG_PREFIX, "enter ", action);
+    //log_info(LOG_PREFIX, "enter ", action);
 
     while ((pid = fork()) == -1) {
       log_warn(LOG_PREFIX, "unable to fork for ", SHUTDOWN);
@@ -321,7 +321,7 @@ void execute(char *action, char * const *envp)
       sig_unblock(SIGPIPE);
       sig_unblock(SIGTERM);
             
-      log_info(LOG_PREFIX, "execute ", action);
+      //log_info(LOG_PREFIX, "execute ", action);
       prog[0] = action;
       prog[1] = 0;
       execve(*prog, (char *const *)prog, envp);
@@ -393,11 +393,11 @@ int main(int argc, char *argv[], char * const *envp) {
 
   execute(STARTUP, envp);
 
-  log_info(LOG_PREFIX, "running services ...", 0);
+  //log_info(LOG_PREFIX, "running services ...", 0);
   services(envp);
 
   execute(SHUTDOWN, envp);
-  log_info(LOG_PREFIX, "shutdown in progress ...", 0);
+  //log_info(LOG_PREFIX, "shutdown in progress ...", 0);
   
   /* reget stderr */
   if ((ttyfd = open("/dev/console", O_WRONLY | O_NONBLOCK)) != -1) {
@@ -406,7 +406,7 @@ int main(int argc, char *argv[], char * const *envp) {
   }
 
   /* fallthrough stage 3 */
-  log_info(LOG_PREFIX, "sending KILL signal to all processes ...", 0);
+  //log_info(LOG_PREFIX, "sending KILL signal to all processes ...", 0);
   kill(-1, SIGKILL);
 
   sync();
@@ -416,7 +416,7 @@ int main(int argc, char *argv[], char * const *envp) {
   } else {
     log_warn(LOG_PREFIX, "umount root error", 0);
   }
-  log_info(LOG_PREFIX, "system is down.", 0);
+  //log_info(LOG_PREFIX, "system is down.", 0);
   reboot(reboot_mode);
   /* not reached */
 }
