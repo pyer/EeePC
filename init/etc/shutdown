@@ -14,7 +14,7 @@ do
   for script in /etc/svdir/enabled/*
   do
     echo -n "."
-    if [ "$(cat $script/supervise/stat)" != "down" ]
+    if [ "$(cat $script/supervise/status)" != "down" ]
     then
       WAIT=0
     fi
