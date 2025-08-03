@@ -1,18 +1,18 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
+#include <poll.h>
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
+#include <time.h>
+#include <unistd.h>
 
-#include "iopause.h"
 #include "log.h"
 #include "sig.h"
 #include "str.h"
-#include "taia.h"
 #include "wait.h"
 
 char *progname;
@@ -38,7 +38,7 @@ struct svdir {
   int state;
   int ctrl;
   int want;
-  struct taia start;
+  time_t start;
   int wstat;
   int fdlock;
   int fdcontrol;
@@ -90,16 +90,12 @@ void s_term() {
 }
 
 void update_status(struct svdir *s) {
-  unsigned long l;
   int fd;
-  char status[20];
   char spid[FMT_ULONG];
-  char *fstatus ="supervise/status";
-  char *fstatusnew ="supervise/status.new";
-  char *fstat ="supervise/stat";
-  char *fstatnew ="supervise/stat.new";
   char *fpid ="supervise/pid";
   char *fpidnew ="supervise/pid.new";
+  char *fstatus ="supervise/status";
+  char *fstatusnew ="supervise/status.new";
 
   /* pid */
   if (pidchanged) {
@@ -107,7 +103,7 @@ void update_status(struct svdir *s) {
       warn("unable to open ", fpidnew);
       return;
     }
-    spid[fmt_ulong(spid, (unsigned long)s->pid)] =0;
+    spid[fmt_ulong(spid, (unsigned long)s->pid)] = 0;
     if (s->pid) {
       write(fd,spid,str_len(spid));
       write(fd,"\n",1);
@@ -120,9 +116,9 @@ void update_status(struct svdir *s) {
     pidchanged =0;
   }
 
-  /* stat */
-  if ((fd = open(fstatnew, O_WRONLY | O_NONBLOCK | O_TRUNC | O_CREAT, 0644)) == -1) {
-    warn("unable to open ", fstatnew);
+  /* status */
+  if ((fd = open(fstatusnew, O_WRONLY | O_NONBLOCK | O_TRUNC | O_CREAT, 0644)) == -1) {
+    warn("unable to open ", fstatusnew);
     return;
   }
   switch (s->state) {
@@ -151,47 +147,10 @@ void update_status(struct svdir *s) {
     }
   write(fd,"\n",1);
   close(fd);
-  if (rename(fstatnew, fstat) == -1)
-    warn("unable to rename stat.new to ", fstat);
-
-  /* supervise compatibility */
-  taia_pack(status, &s->start);
-  l =(unsigned long)s->pid;
-  status[12] =l; l >>=8;
-  status[13] =l; l >>=8;
-  status[14] =l; l >>=8;
-  status[15] =l;
-  if (s->ctrl & C_PAUSE)
-    status[16] =1;
-  else
-    status[16] =0;
-  if (s->want == W_UP)
-    status[17] ='u';
-  else
-    status[17] ='d';
-  if (s->ctrl & C_TERM)
-    status[18] =1;
-  else
-    status[18] =0;
-  status[19] =s->state;
-  if ((fd = open(fstatusnew, O_WRONLY | O_NONBLOCK | O_TRUNC | O_CREAT, 0644)) == -1) {
-    warn("unable to open ", fstatusnew);
-    return;
-  }
-  if ((l =write(fd, status, sizeof status)) == -1) {
-    warn("unable to write ", fstatusnew);
-    close(fd);
-    unlink(fstatusnew);
-    return;
-  }
-  close(fd);
-  if (l < sizeof status) {
-    warn("unable to write ", fstatusnew);
-    return;
-  }
   if (rename(fstatusnew, fstatus) == -1)
     warn("unable to rename status.new to ", fstatus);
 }
+
 unsigned int custom(struct svdir *s, char c) {
   int pid;
   int w;
@@ -228,6 +187,7 @@ unsigned int custom(struct svdir *s, char c) {
   }
   return(0);
 }
+
 void stopservice(struct svdir *s) {
   if (s->pid && ! custom(s, 't')) {
     kill(s->pid, SIGTERM);
@@ -276,11 +236,11 @@ void startservice(struct svdir *s) {
     sig_default(SIGTERM);
     sig_unblock(SIGTERM);
     execve(*run, run, environ);
-    fatal("unable to start ", *run);
+    fatal("unable to execute ", *run);
   }
   if (s->state != S_FINISH) {
-    taia_now(&s->start);
-    s->state =S_RUN;
+    s->start = time(NULL);
+    s->state = S_RUN;
   }
   s->pid =p;
   pidchanged =1;
@@ -384,7 +344,6 @@ int main(int argc, char *argv[], char * const *envp) {
   svd[0].ctrl =C_NOOP;
   svd[0].want =W_UP;
   svd[1].pid =0;
-  taia_now(&svd[0].start);
   if (stat("down", &s) != -1) svd[0].want =W_DOWN;
 
   if (mkdir("supervise", 0700) == -1) {
@@ -427,27 +386,23 @@ int main(int argc, char *argv[], char * const *envp) {
   fcntl(fd, F_SETFD, 1);
 
   for (;;) {
-    iopause_fd x[3];
-    struct taia deadline;
-    struct taia now;
+    struct pollfd x[3];
     char ch;
 
     if (! svd[0].pid)
       if ((svd[0].want == W_UP) || (svd[0].state == S_FINISH))
         startservice(&svd[0]);
 
-    x[0].fd =selfpipe[0];
-    x[0].events =IOPAUSE_READ;
-    x[1].fd =svd[0].fdcontrol;
-    x[1].events =IOPAUSE_READ;
-
-    taia_now(&now);
-    taia_uint(&deadline, 3600);
-    taia_add(&deadline, &now, &deadline);
+    x[0].fd = selfpipe[0];
+    x[0].events = POLLIN;
+    x[0].revents = 0;
+    x[1].fd = svd[0].fdcontrol;
+    x[1].events = POLLIN;
+    x[1].revents = 0;
 
     sig_unblock(SIGTERM);
     sig_unblock(SIGCHLD);
-    iopause(x, 2, &deadline, &now);
+    poll(x, 2, 1000);
     sig_block(SIGTERM);
     sig_block(SIGCHLD);
 
@@ -475,11 +430,7 @@ int main(int argc, char *argv[], char * const *envp) {
             continue;
           }
         svd[0].state =S_DOWN;
-        taia_uint(&deadline, 1);
-        taia_add(&deadline, &svd[0].start, &deadline);
-        taia_now(&svd[0].start);
         update_status(&svd[0]);
-        if (taia_less(&svd[0].start, &deadline)) sleep(1);
       }
     }
     if (read(svd[0].fdcontrol, &ch, 1) == 1) ctrl(&svd[0], ch);

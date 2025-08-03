@@ -31,18 +31,18 @@ case "${action}" in
   start)
     check_enabled_service
     /usr/bin/printf "u" >/etc/svdir/enabled/${service}/supervise/control
-    /usr/bin/cat /etc/svdir/enabled/${service}/supervise/stat
+    /usr/bin/cat /etc/svdir/enabled/${service}/supervise/status
     ;;
   stop)
     check_enabled_service
     /usr/bin/printf "d" >/etc/svdir/enabled/${service}/supervise/control
-    /usr/bin/cat /etc/svdir/enabled/${service}/supervise/stat
+    /usr/bin/cat /etc/svdir/enabled/${service}/supervise/status
     ;;
   status|st)
     check_service
     if [ -d "/etc/svdir/enabled/${service}/supervise" ]
     then
-      /usr/bin/cat /etc/svdir/enabled/${service}/supervise/stat
+      /usr/bin/cat /etc/svdir/enabled/${service}/supervise/status
     else
       if [ -d "/etc/svdir/available/${service}" ]
       then

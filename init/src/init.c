@@ -4,21 +4,21 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 #include <sys/reboot.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <signal.h>
-#include <unistd.h>
-#include <fcntl.h>
 
-#include "iopause.h"
 #include "log.h"
 #include "sig.h"
 #include "str.h"
 #include "wait.h"
+
+#define TRUE     1
+#define FALSE    0
 
 #define STARTUP  "/etc/startup"
 #define SHUTDOWN "/etc/shutdown"
@@ -30,17 +30,17 @@
 
 #define LOG_PREFIX "init"
 
-#define INFO "[ INIT ] "
-#define WARNING "[ INIT ] warning: "
-#define FATAL "[ INIT ] fatal: "
+#define INFO     "[ INIT ] "
+#define WARNING  "[ INIT ] warning: "
+#define FATAL    "[ INIT ] fatal: "
 
 #define MAXSERVICES 1000
 char *svdir = SVDIR;
 
 int reboot_mode = 0;
 
-int sigc =0;
-int sigi =0;
+int sigc = 0;
+int sigi = 0;
 
 /*
  * signal handlers
@@ -62,6 +62,21 @@ void sig_child_handler(void) {
 */
 
 /*
+ * check change in svdir
+ */
+static bool svdir_is_modified(struct stat *svdir, struct stat *previous) {
+        if (svdir->st_ino != previous->st_ino)
+		return TRUE;
+	if (svdir->st_dev != previous->st_dev)
+		return TRUE;
+	if (svdir->st_mtim.tv_sec > previous->st_mtim.tv_sec)
+		return TRUE;
+	else if (svdir->st_mtim.tv_sec < previous->st_mtim.tv_sec)
+		return FALSE;
+	return svdir->st_mtim.tv_nsec > previous->st_mtim.tv_nsec;
+}
+
+/*
  * run services
  */
 unsigned long dev =0;
@@ -76,7 +91,6 @@ struct {
 
 int svnum =0;
 int check =1;
-iopause_fd io[1];
 
 void runsv(int no, char *name, char * const *envp)
 {
@@ -172,14 +186,12 @@ void runsvdir(char * const *envp)
 /*
  */
 int services(char * const *envp) {
-  struct stat s;
-  time_t mtime =0;
+  struct stat previous;
+  struct stat current;
   int wstat;
   int curdir;
   int pid;
-  struct taia deadline;
-  struct taia now;
-  struct taia stampcheck;
+  struct pollfd st_poll;
   int i;
 
   if (chdir(svdir) != 0) {
@@ -191,8 +203,13 @@ int services(char * const *envp) {
     log_error(LOG_PREFIX, "unable to open current directory", 0);
     return(100);
   }
-  fcntl(curdir,F_SETFD,1);
 
+  if (fstat(curdir, &previous) == -1) {
+    log_error(LOG_PREFIX, "unable to stat current directory", 0);
+    return(100);
+  }
+
+  fcntl(curdir,F_SETFD,1);
   setsid();
 
       sig_unblock(SIGALRM);
@@ -206,12 +223,13 @@ int services(char * const *envp) {
       sig_unblock(SIGPIPE);
       sig_unblock(SIGTERM);
 
-  taia_now(&stampcheck);
-
   for (;;) {
     /* collect children */
     for (;;) {
-      if ((pid =wait_nohang(&wstat)) <= 0) break;
+      pid = wait_nohang(&wstat);
+      if (pid <= 0) {
+        break;
+      }
       for (i =0; i < svnum; i++) {
         if (pid == sv[i].pid) {
           /* runsv has gone */
@@ -222,38 +240,24 @@ int services(char * const *envp) {
       }
     }
 
-    taia_now(&now);
-    if (now.sec.x < (stampcheck.sec.x -3)) {
-      /* time warp */
-      log_warn(LOG_PREFIX, "time warp", ": resetting time stamp.");
-      taia_now(&stampcheck);
-      taia_now(&now);
-    }
-    if (taia_less(&now, &stampcheck) == 0) {
-      /* wait at least a second */
-      taia_uint(&deadline, 1);
-      taia_add(&stampcheck, &now, &deadline);
-      
-      if (stat(svdir, &s) != -1) {
-        if (check || s.st_mtime != mtime || s.st_ino != ino || s.st_dev != dev) {
-            mtime =s.st_mtime;
-            dev =s.st_dev;
-            ino =s.st_ino;
-            check =0;
-            if (now.sec.x <= (4611686018427387914ULL +(uint64)mtime))
-              sleep(1);
+    if (fstat(curdir, &current) != -1) {
+      if (check || svdir_is_modified(&current, &previous)) {
+            previous.st_mtim.tv_sec  = current.st_mtim.tv_sec;
+            previous.st_mtim.tv_nsec = current.st_mtim.tv_nsec;
+            previous.st_dev   = current.st_dev;
+            previous.st_ino   = current.st_ino;
+            check = 0;
             runsvdir(envp);
-        }
-      } else {
-        log_warn(LOG_PREFIX, "unable to stat ", svdir);
       }
+    } else {
+      log_warn(LOG_PREFIX, "unable to stat ", svdir);
     }
-
-    taia_uint(&deadline, check ? 1 : 5);
-    taia_add(&deadline, &now, &deadline);
 
     sig_block(SIGCHLD);
-    iopause(0, 0, &deadline, &now);
+    st_poll.fd = curdir;
+    st_poll.events = 0;
+    st_poll.revents = 0;
+    poll(&st_poll, 1, 1000);
     sig_unblock(SIGCHLD);
 
     if (sigi) {
@@ -339,6 +343,7 @@ int main(int argc, char *argv[], char * const *envp) {
   char *flagname = HALT;
 
   if (getpid() != 1) {
+    /* shutdown */
     unlink(HALT);
     unlink(POWEROFF);
     unlink(REBOOT);
@@ -364,6 +369,7 @@ int main(int argc, char *argv[], char * const *envp) {
     _exit(0);
   }
 
+  /* boot */
   setsid();
 
   sig_block(SIGALRM);
