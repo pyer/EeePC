@@ -45,7 +45,6 @@ struct svdir {
 struct svdir svd[2];
 
 int sigterm =0;
-int pidchanged =1;
 char *dir;
 
 
@@ -89,30 +88,8 @@ void s_term() {
 
 void update_status(struct svdir *s) {
   int fd;
-  char spid[FMT_ULONG];
-  char *fpid ="supervise/pid";
-  char *fpidnew ="supervise/pid.new";
   char *fstatus ="supervise/status";
   char *fstatusnew ="supervise/status.new";
-
-  /* pid */
-  if (pidchanged) {
-    if ((fd = open(fpidnew, O_WRONLY | O_NONBLOCK | O_TRUNC | O_CREAT, 0644)) == -1) {
-      warn("unable to open ", fpidnew);
-      return;
-    }
-    spid[fmt_ulong(spid, (unsigned long)s->pid)] = 0;
-    if (s->pid) {
-      write(fd,spid,str_len(spid));
-      write(fd,"\n",1);
-    }
-    close(fd);
-    if (rename(fpidnew, fpid) == -1) {
-      warn("unable to rename pid.new to ", fpid);
-      return;
-    }
-    pidchanged =0;
-  }
 
   /* status */
   if ((fd = open(fstatusnew, O_WRONLY | O_NONBLOCK | O_TRUNC | O_CREAT, 0644)) == -1) {
@@ -241,7 +218,6 @@ void startservice(struct svdir *s) {
     s->state = S_RUN;
   }
   s->pid =p;
-  pidchanged =1;
   s->ctrl =C_NOOP;
   update_status(s);
 }
@@ -342,7 +318,6 @@ int main(int argc, char *argv[], char * const *envp) {
   svd[0].ctrl =C_NOOP;
   svd[0].want =W_UP;
   svd[1].pid =0;
-  if (stat("down", &s) != -1) svd[0].want =W_DOWN;
 
   if (mkdir("supervise", 0700) == -1) {
     if ((r =readlink("supervise", buf, 256)) != -1) {
@@ -403,7 +378,6 @@ int main(int argc, char *argv[], char * const *envp) {
         break;
       if (child == svd[0].pid) {
         svd[0].pid =0;
-        pidchanged =1;
         svd[0].wstat =wstat;
         svd[0].ctrl &=~C_TERM;
         if (svd[0].state != S_FINISH)
