@@ -88,8 +88,8 @@ void s_term() {
 
 void update_status(struct svdir *s) {
   int fd;
-  char *fstatus ="supervise/status";
-  char *fstatusnew ="supervise/status.new";
+  char *fstatus ="status";
+  char *fstatusnew ="status.new";
 
   /* status */
   if ((fd = open(fstatusnew, O_WRONLY | O_NONBLOCK | O_TRUNC | O_CREAT, 0644)) == -1) {
@@ -126,56 +126,14 @@ void update_status(struct svdir *s) {
     warn("unable to rename status.new to ", fstatus);
 }
 
-unsigned int custom(struct svdir *s, char c) {
-  int pid;
-  int w;
-  struct stat st;
-  char *prog[2];
-  char a[10] = "control/?";
-
-  a[8] = c;
-  if (stat(a, &st) == 0) {
-    if (st.st_mode & S_IXUSR) {
-      if ((pid =fork()) == -1) {
-        warn("unable to fork for ", a);
-        return(0);
-      }
-      if (! pid) {
-        prog[0] =a;
-        prog[1] =0;
-        execve(a, prog, environ);
-        fatal("unable to run control/? for ", a);
-      }
-      while (wait_pid(&w, pid) == -1) {
-        if (errno == EINTR)
-          continue;
-        warn("unable to wait for child ", a);
-        return(0);
-      }
-      return(! wait_exitcode(w));
-    }
-  }
-  else {
-    if (errno == ENOENT)
-      return(0);
-    warn("unable to stat ", a);
-  }
-  return(0);
-}
-
 void stopservice(struct svdir *s) {
-  if (s->pid && ! custom(s, 't')) {
+  if (s->pid) {
     kill(s->pid, SIGTERM);
     s->ctrl |=C_TERM;
     update_status(s);
   }
-  if (s->want == W_DOWN) {
+  if (s->want == W_DOWN || s->want == W_EXIT) {
     kill(s->pid, SIGCONT);
-    custom(s, 'd'); return;
-  }
-  if (s->want == W_EXIT) {
-    kill(s->pid, SIGCONT);
-    custom(s, 'x');
   }
 }
 
@@ -195,7 +153,6 @@ void startservice(struct svdir *s) {
   }
   else {
     run[0] ="./run";
-    custom(s, 'u');
     run[1] =0;
   }
 
@@ -221,6 +178,7 @@ void startservice(struct svdir *s) {
   s->ctrl =C_NOOP;
   update_status(s);
 }
+
 int ctrl(struct svdir *s, char c) {
   switch(c) {
   case 'd': /* down */
@@ -242,16 +200,16 @@ int ctrl(struct svdir *s, char c) {
     if (s->state == S_RUN) stopservice(s);
     break;
   case 'k': /* sig kill */
-    if ((s->state == S_RUN) && ! custom(s, c)) kill(s->pid, SIGKILL);
+    if (s->state == S_RUN) kill(s->pid, SIGKILL);
     s->state =S_DOWN;
     break;
   case 'p': /* sig pause */
-    if ((s->state == S_RUN) && ! custom(s, c)) kill(s->pid, SIGSTOP);
+    if (s->state == S_RUN) kill(s->pid, SIGSTOP);
     s->ctrl |=C_PAUSE;
     update_status(s);
     break;
   case 'c': /* sig cont */
-    if ((s->state == S_RUN) && ! custom(s, c)) kill(s->pid, SIGCONT);
+    if (s->state == S_RUN) kill(s->pid, SIGCONT);
     if (s->ctrl & C_PAUSE) s->ctrl &=~C_PAUSE;
     update_status(s);
     break;
@@ -261,22 +219,22 @@ int ctrl(struct svdir *s, char c) {
     if (s->state == S_DOWN) startservice(s);
     break;
   case 'a': /* sig alarm */
-    if ((s->state == S_RUN) && ! custom(s, c)) kill(s->pid, SIGALRM);
+    if (s->state == S_RUN) kill(s->pid, SIGALRM);
     break;
   case 'h': /* sig hup */
-    if ((s->state == S_RUN) && ! custom(s, c)) kill(s->pid, SIGHUP);
+    if (s->state == S_RUN) kill(s->pid, SIGHUP);
     break;
   case 'i': /* sig int */
-    if ((s->state == S_RUN) && ! custom(s, c)) kill(s->pid, SIGINT);
+    if (s->state == S_RUN) kill(s->pid, SIGINT);
     break;
   case 'q': /* sig quit */
-    if ((s->state == S_RUN) && ! custom(s, c)) kill(s->pid, SIGQUIT);
+    if (s->state == S_RUN) kill(s->pid, SIGQUIT);
     break;
   case '1': /* sig usr1 */
-    if ((s->state == S_RUN) && ! custom(s, c)) kill(s->pid, SIGUSR1);
+    if (s->state == S_RUN) kill(s->pid, SIGUSR1);
     break;
   case '2': /* sig usr2 */
-    if ((s->state == S_RUN) && ! custom(s, c)) kill(s->pid, SIGUSR2);
+    if (s->state == S_RUN) kill(s->pid, SIGUSR2);
     break;
   }
   return(1);
@@ -288,8 +246,6 @@ int ctrl(struct svdir *s, char c) {
 int main(int argc, char *argv[], char * const *envp) {
   struct stat s;
   int fd;
-  int r;
-  char buf[256];
 
   progname = argv[0];
   environ  = envp;
@@ -319,28 +275,13 @@ int main(int argc, char *argv[], char * const *envp) {
   svd[0].want =W_UP;
   svd[1].pid =0;
 
-  if (mkdir("supervise", 0700) == -1) {
-    if ((r =readlink("supervise", buf, 256)) != -1) {
-      if (r == 256) {
-        errno = 75;
-        fatal("unable to readlink ./supervise", 0);
-      }
-      buf[r] =0;
-      mkdir(buf, 0700);
-    }
-    else {
-      if ((errno != ENOENT) && (errno != EINVAL))
-        fatal("unable to readlink ./supervise", 0);
-    }
-  }
-
-  mkfifo("supervise/control", 0600);
-  if (stat("supervise/control", &s) == -1)
-    fatal("unable to stat supervise/control", 0);
+  mkfifo("control", 0600);
+  if (stat("control", &s) == -1)
+    fatal("unable to stat service/control", 0);
   if (!S_ISFIFO(s.st_mode))
-    fatal("supervise/control exists but is not a fifo", 0);
-  if ((svd[0].fdcontrol = open("supervise/control", O_RDONLY | O_NONBLOCK)) == -1)
-    fatal("unable to open supervise/control", 0);
+    fatal("service/control exists but is not a fifo", 0);
+  if ((svd[0].fdcontrol = open("control", O_RDONLY | O_NONBLOCK)) == -1)
+    fatal("unable to open service/control", 0);
   fcntl(svd[0].fdcontrol, F_SETFD, 1);
   update_status(&svd[0]);
 

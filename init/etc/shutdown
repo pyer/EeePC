@@ -2,19 +2,19 @@
 export PATH=/sbin:/bin
 
 echo "Waiting for services to stop"
-for script in /etc/svdir/enabled/*
+for service in /etc/svdir/enabled/*
 do
-  echo -n "d" >$script/supervise/control
+  echo -n "d" >$service/control
 done
 
 WAIT=0
 while [ $WAIT -eq 0 ]
 do
   WAIT=1
-  for script in /etc/svdir/enabled/*
+  for service in /etc/svdir/enabled/*
   do
     echo -n "."
-    if [ "$(cat $script/supervise/status)" != "down" ]
+    if [ "$(cat $service/status)" != "down" ]
     then
       WAIT=0
     fi
