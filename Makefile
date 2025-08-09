@@ -74,12 +74,6 @@ services:
 	sudo sv enable tty4
 
 ####################
-network:
-	sudo rm    /etc/resolv.conf
-	sudo rm -r /etc/resolvconf
-	sudo cp -r network/* /etc/
-
-####################
 config:
 	mkdir -p /home/pierre/.ssh
 	chmod 700 /home/pierre/.ssh
@@ -100,13 +94,13 @@ system:
 	sudo apt install -y isc-dhcp-server
 	sudo touch /var/lib/dhcp/dhcpd.leases
 	sudo apt install -y ntp
-	sudo apt install -y ssh
+	#sudo apt install -y ssh
 	sudo updatedb
 
 ####################
 remove_packages:
 	sudo mkdir -p /usr/share/fonts/psf
-	sudo cp /usr/share/consolefonts/Uni*psf.gz /usr/share/fonts/psf/
+	sudo cp /usr/share/consolefonts/*psf.gz /usr/share/fonts/psf/
 	sudo apt purge -y ufw
 	sudo apt purge -y x11-common
 	sudo apt purge -y libx11-6
@@ -125,7 +119,7 @@ clean_system:
 	sudo rm -rf /etc/init.d
 	sudo rm -rf /etc/runit*
 	sudo rm -f  /etc/service
-	sudo rm -rf /etc/systemd
+	#sudo rm -rf /etc/systemd
 	sudo rm -f  /etc/slimski.local.conf
 	sudo rm -rf /var/log/fsck
 	sudo rm -rf /var/log/private
