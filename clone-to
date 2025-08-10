@@ -1,0 +1,113 @@
+#!/bin/bash
+
+
+TEXTDOMAINDIR=/usr/share/locale
+TEXTDOMAIN=cli-installer
+
+#Default
+DISTRO=antiX
+
+##functions
+
+help_text() {
+echo $"Usage: $0 <drive>"
+echo $"Where drive is the name of the drive where $DISTRO is to be installed on."
+echo $"   For example: $0 sdb1"
+echo
+}
+
+make_fstab() {
+echo "Make fstab"
+echo "$TARGET / ext4 defaults,relatime 0 1" >/etc/fstab
+SWAPDEV=$(swapon --show --noheadings |cut -d ' ' -f1)
+[ -n $SWAPDEV ] && echo "$SWAPDEV none swap defaults 0 0" >>/etc/fstab
+}
+
+yn() {
+x=1
+while [[ "$x" -eq 1 ]]
+do
+x=0
+read -p "$*? "
+if [[ ("$REPLY" > "x~" && "$REPLY" < "z" ) || ("$REPLY" > "X~" && "$REPLY" < "Z") ]]
+  then ans=1	# yes
+  elif [[ ("$REPLY" > "m~" && "$REPLY" < "o" ) || ( "$REPLY" > "M~" && "$REPLY" < "O") ]]
+  then ans=0	# no
+  elif [[ -z "$REPLY" ]]
+  then ans=-1	# default
+  else
+  x=1
+  echo $"Invalid; retry:"
+fi
+done
+}
+
+##End of functions
+
+## Main entry
+#
+if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" || -z $1 ]]
+then
+  help_text
+  exit
+fi
+
+# Run as root check
+if [[ $UID -ne 0 ]]
+  then
+  echo "Error: please run this script as root."
+  exit 1
+fi
+
+# Target disk
+DRIVE=$1
+
+TARGET="/dev/$DRIVE"
+SOURCE=$(mount | grep ' on / ' | cut -d ' ' -f 1)
+if [ "$TARGET" == "$SOURCE" ]
+then
+  echo "ERROR: the current boot disk will be destroyed."
+  exit 1
+fi
+
+# Show requirements
+kernel="-$(uname -r)"
+echo "Install $kernel on /dev/$DRIVE"
+echo "Beware, all data on $DRIVE wil be destroyed."
+yn $"Are you sure ? (y/N)"
+echo
+if [[ $ans -eq 1 ]]
+then
+  echo "Work in progress..."
+else
+  exit
+fi
+
+if mountpoint -q /mnt
+then
+  umount /mnt
+fi
+mount $TARGET /mnt
+rm -rf /mnt/*
+cd /mnt
+cp -ra /boot .
+cp -ra /usr .
+cp -ra /etc .
+cp -ra /home .
+cp -ra /root .
+cp -ra /var .
+mkdir dev
+mkdir media
+mkdir mnt
+mkdir opt
+mkdir proc
+mkdir run
+mkdir srv
+mkdir sys
+mkdir -m 0777 tmp
+ln -s usr/bin  bin
+ln -s usr/lib  lib
+ln -s usr/sbin sbin
+echo
+make_fstab
+echo "Done."

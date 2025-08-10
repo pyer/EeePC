@@ -1,0 +1,20 @@
+#!/bin/sh
+PATH=/sbin:/bin
+EDITOR=vim
+#loadkeys fr
+#cp interfaces /etc/network/
+#ifdown wlan0
+#ifup wlan0
+apt update
+apt upgrade
+apt install -y vim
+apt install -y git
+apt install -y libc6-dev
+apt install -y make
+apt install -y gcc
+apt install -y sudo
+cp gitconfig /home/pierre/.gitconfig
+cp git-credentials /home/pierre/.git-credentials
+cd /home/pierre
+git clone https://github.com/pyer/EeePC.git
+chown -R pierre:pierre .
