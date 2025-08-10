@@ -1,7 +1,7 @@
 #!/bin/sh -e
-PATH=/lib/udev:/sbin:/bin
+PATH="/sbin:/bin"
 NAME="udevd"
-DAEMON="/sbin/udevd"
+DAEMON="/bin/udevadm"
 PIDFILE="/run/udevd.pid"
 CTRLFILE="/run/udev/control"
 OMITDIR="/run/sendsigs.omit.d"
