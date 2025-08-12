@@ -65,13 +65,14 @@ init:
 	sudo cp -r init/etc/* /etc/
 	@echo "Install tasks"
 	sudo mkdir -p /etc/tasks/enabled
-	sudo task enable dhcpd
-	sudo task enable ntpd
-	sudo task enable sshd
+	#sudo task enable dhcpd
+	#sudo task enable ntpd
+	#sudo task enable sshd
 	sudo task enable tty1
 	sudo task enable tty2
 	sudo task enable tty3
 	sudo task enable tty4
+	sudo sync
 
 ####################
 config:
@@ -95,13 +96,13 @@ system:
 	sudo touch /var/lib/dhcp/dhcpd.leases
 	sudo apt install -y ntp
 	#sudo apt install -y ssh
+	sudo apt install -y locate
 	sudo updatedb
 
 ####################
 remove_packages:
-	sudo mkdir -p /usr/share/fonts/psf
-	sudo cp /usr/share/consolefonts/*psf.gz /usr/share/fonts/psf/
-	sudo apt purge -y ufw
+	#sudo mkdir -p /usr/share/fonts/psf
+	#sudo cp /usr/share/consolefonts/*psf.gz /usr/share/fonts/psf/
 	sudo apt purge -y x11-common
 	sudo apt purge -y libx11-6
 	sudo apt purge -y libx11-data
@@ -110,6 +111,8 @@ remove_packages:
 	sudo apt purge -y systemd
 	sudo apt purge -y libsystemd-shared
 	sudo apt purge -y tasksel
+	sudo apt purge -y initscripts
+	sudo apt purge -y emacsen-common
 	#sudo apt purge -y init-system-helpers
 	#sudo apt purge -y runit-init-antix
 	#sudo apt purge -y sysvinit-utils-antix
