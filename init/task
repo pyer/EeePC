@@ -1,0 +1,78 @@
+#!/bin/sh
+#
+action=$1
+task=$2
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+check_task() {
+  if [ -z ${task} ]
+  then
+    echo "ERROR: task undefined"
+    exit 1
+  fi
+}
+
+check_enabled_task() {
+  check_task
+  if [ ! -d "/etc/tasks/enabled/${task}" ]
+  then
+    echo "ERROR: task ${task} is disabled"
+    exit 1
+  fi
+  if [ ! -d "/etc/tasks/available/${task}" ]
+  then
+    echo "ERROR: task ${task} not found"
+    exit 1
+  fi
+}
+
+case "${action}" in
+  start)
+    check_enabled_task
+    /usr/bin/printf "u" >/etc/tasks/enabled/${task}/control
+    /usr/bin/cat /etc/tasks/enabled/${task}/status
+    ;;
+  stop)
+    check_enabled_task
+    /usr/bin/printf "d" >/etc/tasks/enabled/${task}/control
+    /usr/bin/cat /etc/tasks/enabled/${task}/status
+    ;;
+  status|st)
+    check_task
+    if [ -f "/etc/tasks/enabled/${task}/status" ]
+    then
+      /usr/bin/cat /etc/tasks/enabled/${task}/status
+    else
+      if [ -d "/etc/tasks/available/${task}" ]
+      then
+        echo "disabled"
+      else
+        echo "not found"
+      fi
+    fi
+    ;;
+  enable)
+    if [ ! -d "/etc/tasks/enabled/${task}" ]
+    then
+      if [ ! -d "/etc/tasks/available/${task}" ]
+      then
+        echo "ERROR: task ${task} not found"
+        exit 1
+      fi
+      /usr/bin/ln -s /etc/tasks/available/${task} /etc/tasks/enabled/${task}
+    fi
+    ;;
+  disable)
+    check_enabled_task
+    /usr/bin/printf "d" >/etc/tasks/enabled/${task}/control
+    /usr/bin/rm -rf /etc/tasks/enabled/${task}
+    ;;
+  list)
+    ls -1 /etc/tasks/enabled | sort
+    ;;
+  *)
+    echo "Usage: $0 <status | start | stop | enable | disable> task"
+    echo "   or: $0 list"
+    ;;
+esac

@@ -49,13 +49,11 @@ char *dir;
 
 
 void fatal(char *m1, char *m2) {
-//  strerr_die6sys(111, "runsv ", dir, ": fatal: ", m1, m2, ": ");
   log_error(dir, m1, m2);
   _exit(111);
 }
 
 void warn(char *m1, char *m2) {
-//  strerr_warn6("runsv ", dir, ": warning: ", m1, m2, ": ", &strerr_sys);
   log_warn(dir, m1, m2);
 }
 
@@ -250,7 +248,7 @@ int main(int argc, char *argv[], char * const *envp) {
   progname = argv[0];
   environ  = envp;
   if (! argv[1] || argv[2]) {
-    fatal("Usage: runsv <service>", 0);
+    fatal("Usage: runtask <task>", 0);
     _exit(1);
   }
   dir = argv[1];

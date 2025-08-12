@@ -22,7 +22,7 @@
 
 #define STARTUP  "/etc/startup"
 #define SHUTDOWN "/etc/shutdown"
-#define SVDIR    "/etc/svdir/enabled"
+#define TASKSDIR "/etc/tasks/enabled"
 
 #define HALT     "/run/shutdown.halt"
 #define POWEROFF "/run/shutdown.poweroff"
@@ -34,8 +34,8 @@
 #define WARNING  "[ INIT ] warning: "
 #define FATAL    "[ INIT ] fatal: "
 
-#define MAXSERVICES 1000
-char *svdir = SVDIR;
+#define MAXTASKS 1000
+char *tasksdir = TASKSDIR;
 
 int reboot_mode = 0;
 
@@ -62,22 +62,22 @@ void sig_child_handler(void) {
 */
 
 /*
- * check change in svdir
+ * check change in tasksdir
  */
-static bool svdir_is_modified(struct stat *svdir, struct stat *previous) {
-        if (svdir->st_ino != previous->st_ino)
+static bool tasksdir_is_modified(struct stat *tasksdir, struct stat *previous) {
+        if (tasksdir->st_ino != previous->st_ino)
 		return TRUE;
-	if (svdir->st_dev != previous->st_dev)
+	if (tasksdir->st_dev != previous->st_dev)
 		return TRUE;
-	if (svdir->st_mtim.tv_sec > previous->st_mtim.tv_sec)
+	if (tasksdir->st_mtim.tv_sec > previous->st_mtim.tv_sec)
 		return TRUE;
-	else if (svdir->st_mtim.tv_sec < previous->st_mtim.tv_sec)
+	else if (tasksdir->st_mtim.tv_sec < previous->st_mtim.tv_sec)
 		return FALSE;
-	return svdir->st_mtim.tv_nsec > previous->st_mtim.tv_nsec;
+	return tasksdir->st_mtim.tv_nsec > previous->st_mtim.tv_nsec;
 }
 
 /*
- * run services
+ * run parse_tasks
  */
 unsigned long dev =0;
 unsigned long ino =0;
@@ -87,12 +87,12 @@ struct {
   unsigned long ino;
   int pid;
   int isgone;
-} sv[MAXSERVICES];
+} tasks_tab[MAXTASKS];
 
-int svnum =0;
+int numtasks =0;
 int check =1;
 
-void runsv(int no, char *name, char * const *envp)
+void run_task(int no, char *name, char * const *envp)
 {
   int pid;
 
@@ -103,20 +103,20 @@ void runsv(int no, char *name, char * const *envp)
   if (pid == 0) {
     /* child */
     const char *prog[3];
-    prog[0] = "/sbin/runsv";
+    prog[0] = "/sbin/runtask";
     prog[1] = name;
     prog[2] = 0;
     sig_default(SIGHUP);
     sig_default(SIGTERM);
     setsid();
     execve(*prog, (char * const*)prog, envp);
-    log_error(LOG_PREFIX, "unable to start runsv ", name);
+    log_error(LOG_PREFIX, "unable to start runtask ", name);
     _exit(100);
   }
-  sv[no].pid = pid;
+  tasks_tab[no].pid = pid;
 }
 
-void runsvdir(char * const *envp)
+void run_tasks(char * const *envp)
 {
   DIR *dir;
   struct dirent *d;
@@ -124,11 +124,11 @@ void runsvdir(char * const *envp)
   struct stat s;
 
   if (! (dir = opendir("."))) {
-    log_warn(LOG_PREFIX, "unable to open directory ", svdir);
+    log_warn(LOG_PREFIX, "unable to open directory ", tasksdir);
     return;
   }
-  for (i =0; i < svnum; i++)
-    sv[i].isgone = 1;
+  for (i =0; i < numtasks; i++)
+    tasks_tab[i].isgone = 1;
 
   errno = 0;
   while ((d = readdir(dir))) {
@@ -141,51 +141,51 @@ void runsvdir(char * const *envp)
     }
     if (! S_ISDIR(s.st_mode))
       continue;
-    for (i =0; i < svnum; i++) {
-      if ((sv[i].ino == s.st_ino) && (sv[i].dev == s.st_dev)) {
-        sv[i].isgone =0;
-        if (! sv[i].pid) runsv(i, d->d_name, envp);
+    for (i =0; i < numtasks; i++) {
+      if ((tasks_tab[i].ino == s.st_ino) && (tasks_tab[i].dev == s.st_dev)) {
+        tasks_tab[i].isgone =0;
+        if (! tasks_tab[i].pid) run_task(i, d->d_name, envp);
         break;
       }
     }
-    if (i == svnum) {
-      /* new service */
-      if (svnum >= MAXSERVICES) {
-        log_warn(LOG_PREFIX, "too many services: unable to start ", d->d_name);
+    if (i == numtasks) {
+      /* new task */
+      if (numtasks >= MAXTASKS) {
+        log_warn(LOG_PREFIX, "too many tasks: unable to start ", d->d_name);
         continue;
       }
-      sv[i].ino =s.st_ino;
-      sv[i].dev =s.st_dev;
-      sv[i].pid =0;
-      sv[i].isgone =0;
-      svnum++;
-      runsv(i, d->d_name, envp);
+      tasks_tab[i].ino =s.st_ino;
+      tasks_tab[i].dev =s.st_dev;
+      tasks_tab[i].pid =0;
+      tasks_tab[i].isgone =0;
+      numtasks++;
+      run_task(i, d->d_name, envp);
       check =1;
     }
   }
   if (errno) {
-    log_warn(LOG_PREFIX, "unable to read directory ", svdir);
+    log_warn(LOG_PREFIX, "unable to read directory ", tasksdir);
     closedir(dir);
     check =1;
     return;
   }
   closedir(dir);
 
-  /* SIGTERM removed runsv's */
-  for (i = 0; i < svnum; i++) {
-    if (! sv[i].isgone)
+  /* SIGTERM removed run_task's */
+  for (i = 0; i < numtasks; i++) {
+    if (! tasks_tab[i].isgone)
       continue;
-    if (sv[i].pid)
-      kill(sv[i].pid, SIGTERM);
+    if (tasks_tab[i].pid)
+      kill(tasks_tab[i].pid, SIGTERM);
 
-    sv[i] = sv[--svnum];
+    tasks_tab[i] = tasks_tab[--numtasks];
     check =1;
   }
 }
 
 /*
  */
-int services(char * const *envp) {
+int parse_tasks(char * const *envp) {
   struct stat previous;
   struct stat current;
   int wstat;
@@ -194,8 +194,8 @@ int services(char * const *envp) {
   struct pollfd st_poll;
   int i;
 
-  if (chdir(svdir) != 0) {
-    log_error(LOG_PREFIX, "unable to change directory to ", svdir);
+  if (chdir(tasksdir) != 0) {
+    log_error(LOG_PREFIX, "unable to change directory to ", tasksdir);
     return(100);
   }
 
@@ -230,10 +230,10 @@ int services(char * const *envp) {
       if (pid <= 0) {
         break;
       }
-      for (i =0; i < svnum; i++) {
-        if (pid == sv[i].pid) {
-          /* runsv has gone */
-          sv[i].pid =0;
+      for (i =0; i < numtasks; i++) {
+        if (pid == tasks_tab[i].pid) {
+          /* run_task has gone */
+          tasks_tab[i].pid =0;
           check =1;
           break;
         }
@@ -241,16 +241,16 @@ int services(char * const *envp) {
     }
 
     if (fstat(curdir, &current) != -1) {
-      if (check || svdir_is_modified(&current, &previous)) {
+      if (check || tasksdir_is_modified(&current, &previous)) {
             previous.st_mtim.tv_sec  = current.st_mtim.tv_sec;
             previous.st_mtim.tv_nsec = current.st_mtim.tv_nsec;
             previous.st_dev   = current.st_dev;
             previous.st_ino   = current.st_ino;
             check = 0;
-            runsvdir(envp);
+            run_tasks(envp);
       }
     } else {
-      log_warn(LOG_PREFIX, "unable to stat ", svdir);
+      log_warn(LOG_PREFIX, "unable to stat ", tasksdir);
     }
 
     sig_block(SIGCHLD);
@@ -276,7 +276,7 @@ int services(char * const *envp) {
           reboot_mode = RB_HALT_SYSTEM;
 
         sigc =0;
-//        for (i =0; i < svnum; i++) if (sv[i].pid) kill(sv[i].pid, SIGTERM);
+//        for (i =0; i < numtasks; i++) if (tasks_tab[i].pid) kill(tasks_tab[i].pid, SIGTERM);
         return(111);
     }
   }
@@ -393,8 +393,8 @@ int main(int argc, char *argv[], char * const *envp) {
 
   execute(STARTUP, envp);
 
-  //log_info(LOG_PREFIX, "running services ...", 0);
-  services(envp);
+  //log_info(LOG_PREFIX, "running tasks ...", 0);
+  parse_tasks(envp);
 
   execute(SHUTDOWN, envp);
   //log_info(LOG_PREFIX, "shutdown in progress ...", 0);

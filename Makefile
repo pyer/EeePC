@@ -33,7 +33,7 @@ cron:
 	sudo rm -rf /etc/cron.*
 	sudo rm -rf /var/cron
 	sudo cp cron/etc/crontab /etc/crontab
-	sudo sv enable cron
+	sudo task enable cron
 	@echo "Install rotatelog"
 	sudo install -m 755 rotatelog/rotatelog /sbin/
 	sudo cp rotatelog/man/rotatelog.8 /usr/share/man/man8/
@@ -47,31 +47,31 @@ init:
 	@echo "Build init"
 	make -C init/src all
 	@echo "Install init"
-	sudo rm -f /bin/sv /bin/runsv
+	sudo rm -f /bin/task /bin/runtask
 	sudo rm -f /sbin/run*
 	sudo rm -f /sbin/init
 	sudo install -m 755 init/src/init     /sbin
 	sudo install -m 755 init/src/logon    /sbin
-	sudo install -m 755 init/src/runsv    /sbin
+	sudo install -m 755 init/src/runtask  /sbin
 	sudo install -m 755 init/src/utmpset  /sbin
-	sudo install -m 755 init/sv           /sbin
+	sudo install -m 755 init/task           /sbin
 	sudo rm -f /sbin/halt /sbin/poweroff  /sbin/reboot
 	sudo ln -s /sbin/init /sbin/halt
 	sudo ln -s /sbin/init /sbin/poweroff
 	sudo ln -s /sbin/init /sbin/reboot
-
-services:
+	@echo "Install scripts"
 	sudo rm -rf /etc/startup.d
 	sudo rm -rf /etc/shutdown.d
 	sudo cp -r init/etc/* /etc/
-	sudo mkdir -p /etc/svdir/enabled
-	sudo sv enable dhcpd
-	sudo sv enable ntpd
-	sudo sv enable sshd
-	sudo sv enable tty1
-	sudo sv enable tty2
-	sudo sv enable tty3
-	sudo sv enable tty4
+	@echo "Install tasks"
+	sudo mkdir -p /etc/tasks/enabled
+	sudo task enable dhcpd
+	sudo task enable ntpd
+	sudo task enable sshd
+	sudo task enable tty1
+	sudo task enable tty2
+	sudo task enable tty3
+	sudo task enable tty4
 
 ####################
 config:
@@ -107,6 +107,9 @@ remove_packages:
 	sudo apt purge -y libx11-data
 	sudo apt purge -y libx11-6
 	sudo apt purge -y xkb-data
+	sudo apt purge -y systemd
+	sudo apt purge -y libsystemd-shared
+	sudo apt purge -y tasksel
 	#sudo apt purge -y init-system-helpers
 	#sudo apt purge -y runit-init-antix
 	#sudo apt purge -y sysvinit-utils-antix
@@ -119,7 +122,7 @@ clean_system:
 	sudo rm -rf /etc/init.d
 	sudo rm -rf /etc/runit*
 	sudo rm -f  /etc/service
-	#sudo rm -rf /etc/systemd
+	sudo rm -rf /etc/systemd
 	sudo rm -f  /etc/slimski.local.conf
 	sudo rm -rf /var/log/fsck
 	sudo rm -rf /var/log/private
