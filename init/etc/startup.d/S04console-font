@@ -1,19 +1,13 @@
 #!/bin/sh
-
-ACTIVE_CONSOLES="/dev/tty[1-6]"
-
 CHARMAP="UTF-8"
-CODESET="Uni3"
-FONTFACE="TerminusBold"
-# FONTSIZE="22x11"
-FONTSIZE="18x10"
+CODESET="Lat15"
+FONTFACE="Fixed"
+FONTSIZE="14"
 
 echo "Setting up console font ${CODESET}-${FONTFACE}${FONTSIZE}"
 font="/usr/share/consolefonts/${CODESET}-${FONTFACE}${FONTSIZE}.psf.gz"
 if [ -f "$font" ]; then
-    for tty in $ACTIVE_CONSOLES; do
-        setfont -C $tty $font
-    done
+    /bin/setfont $font
 else
     echo "File $font not found" >&2
     exit 1

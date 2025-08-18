@@ -85,13 +85,14 @@ config:
 	sudo cp config/timezone /etc/timezone
 	sudo rm -f /etc/localtime
 	sudo ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime
-	sudo cp config/motd /etc/
+	sudo cp config/issue /etc/
+	sudo cp config/motd  /etc/
+	sudo mkdir -p /usr/share/keymap
+	sudo cp config/UTF-8_del.kmap.gz /usr/share/keymap/
 
 ####################
 system:
-	# sudo mkdir -p /usr/share/fonts/psf
-	# sudo cp /usr/share/consolefonts/Uni*psf.gz /usr/share/fonts/psf/
-	sudo apt install -y iptables
+	#sudo apt install -y iptables
 	sudo apt install -y isc-dhcp-server
 	sudo touch /var/lib/dhcp/dhcpd.leases
 	sudo apt install -y ntp
