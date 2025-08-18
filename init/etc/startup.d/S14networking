@@ -1,8 +1,6 @@
 #!/bin/sh -e
 PATH=/sbin:/bin
-
 CONFIGURE_INTERFACES=yes
-EXCLUDE_INTERFACES=
 
 [ -x /sbin/ifup ] || exit 0
 [ -x /sbin/ifdown ] || exit 0
@@ -14,28 +12,22 @@ then
 fi
 
 echo "Configuring network interfaces"
-exclusions=""
-for iface in $EXCLUDE_INTERFACES
-do
-  echo "Excluding $iface"
-  exclusions="-X $iface $exclusions"
-done
 
 if [ -x /bin/udevadm ]; then
   /bin/udevadm settle
 fi
 
-modprobe ath9k
-
-echo "Configuring auto interfaces"
-for iface in $(ifquery --list --allow=auto $exclusions)
+for iface in $(ifquery --list --allow=auto)
 do
   echo "  - $iface"
   ifup $iface
 done
 
 echo "Configuring hotplug interfaces"
-for iface in $(ifquery --list --allow=hotplug $exclusions)
+# Patch for the wireless interface
+modprobe ath9k
+
+for iface in $(ifquery --list --allow=hotplug)
 do
   echo "  - $iface"
   ifup $iface
