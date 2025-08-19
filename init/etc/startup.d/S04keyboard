@@ -1,3 +1,0 @@
-#!/bin/sh
-echo "Setting up french keyboard"
-/bin/loadkeys /usr/share/keymap/UTF-8_del.kmap.gz

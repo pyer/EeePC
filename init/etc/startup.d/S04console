@@ -1,14 +1,23 @@
 #!/bin/sh
+ACTIVE_CONSOLES="/dev/tty[1-6]"
+
 CHARMAP="UTF-8"
 CODESET="Lat15"
-FONTFACE="Fixed"
+FONTFACE="Terminus"
 FONTSIZE="14"
+
+echo "Setting up french keyboard"
+/bin/loadkeys /usr/share/keymap/UTF-8_del.kmap.gz
 
 echo "Setting up console font ${CODESET}-${FONTFACE}${FONTSIZE}"
 font="/usr/share/consolefonts/${CODESET}-${FONTFACE}${FONTSIZE}.psf.gz"
 if [ -f "$font" ]; then
-    /bin/setfont $font
+    for tty in $ACTIVE_CONSOLES; do
+        /bin/kbd_mode -C $tty -u
+        /bin/setfont -C $tty $font
+    done
 else
     echo "File $font not found" >&2
     exit 1
 fi
+
