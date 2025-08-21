@@ -24,9 +24,6 @@ do
 done
 
 echo "Configuring hotplug interfaces"
-# Patch for the wireless interface
-modprobe ath9k
-
 for iface in $(ifquery --list --allow=hotplug)
 do
   echo "  - $iface"

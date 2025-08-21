@@ -1,7 +1,21 @@
-#!/bin/sh
+#!/bin/bash
 export PATH=/sbin:/bin
 export LANG=en_US.UTF-8
 
+echo "Loading modules"
+modules="/etc/modules"
+if [ -f "$modules" ]; then
+  while read MOD
+  do
+    if [ -n "$MOD" ] && [ "${MOD:0:1}" != "#" ]
+    then
+      echo "  - $MOD"
+      /sbin/modprobe $MOD
+    fi
+  done < "$modules"
+fi
+
+echo "Startup in progress ..."
 for script in /etc/startup.d/S*
 do
   "$script" start
