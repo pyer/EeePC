@@ -1,10 +1,5 @@
 #!/bin/sh -e
 PATH="/sbin:/bin"
-NAME="udevd"
-DAEMON="/bin/udevadm"
-PIDFILE="/run/udevd.pid"
-CTRLFILE="/run/udev/control"
-OMITDIR="/run/sendsigs.omit.d"
 
 # we need to unmount /dev/pts/ and remount it later over the devtmpfs
 unmount_devpts() {
@@ -50,28 +45,28 @@ make_static_nodes() {
 
 ##############################################################################
 
-echo "Starting udevd"
+echo "Starting udev"
 if [ -e /etc/udev/udev.conf ]; then
   . /etc/udev/udev.conf
 fi
 
 if [ ! -e /proc/filesystems ]; then
-  echo "udevd requires a mounted procfs, not started"
+  echo "udev requires a mounted procfs, not started"
   exit 1
 fi
 
 if ! grep -q '[[:space:]]devtmpfs$' /proc/filesystems; then
-  echo "udevd requires devtmpfs support, not started"
+  echo "udev requires devtmpfs support, not started"
   exit 1
 fi
 
 if [ ! -d /sys/class/ ]; then
-  echo "udevd requires a mounted sysfs, not started"
+  echo "udev requires a mounted sysfs, not started"
   exit 1
 fi
 
 if ! ps --no-headers --format args ax | egrep -q '^\['; then
-  echo "udevd does not support containers, not started"
+  echo "udev does not support containers, not started"
   exit 0
 fi
 
@@ -94,14 +89,12 @@ make_static_nodes
 # clean up parts of the database created by the initramfs udev
 udevadm info --cleanup-db
 
-start-stop-daemon --start --name $NAME --user root --quiet --pidfile $PIDFILE --exec $DAEMON --background --make-pidfile
-
 echo "Synthesizing the initial hotplug events (subsystems)"
 udevadm trigger --type=subsystems --action=add
 echo "Synthesizing the initial hotplug events (devices)"
 udevadm trigger --type=devices --action=add
 
-# wait for the udevd childs to finish
+# wait for the udev childs to finish
 echo "Waiting for /dev to be fully populated"
 udevadm settle
 

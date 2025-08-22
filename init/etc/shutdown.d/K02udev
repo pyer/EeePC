@@ -1,6 +1,4 @@
 #!/bin/sh -e
-echo "Stop udevd daemon"
-/sbin/start-stop-daemon --stop --name udevd --user root --quiet --pidfile /run/udevd.pid --remove-pidfile --oknodo --retry 5
 # prevents cryptsetup/dmsetup hangs ( see #261 & Debian bug #791944 )
 /usr/bin/rm -f /run/udev/control
 
