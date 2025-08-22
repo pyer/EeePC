@@ -1,5 +1,5 @@
 #
-.PHONY: clean cron init services network config system clean_system
+.PHONY: help clean cron init config system clean_system
 
 ####################
 help:
@@ -96,12 +96,14 @@ system:
 	sudo apt install -y isc-dhcp-server
 	sudo touch /var/lib/dhcp/dhcpd.leases
 	sudo apt install -y ntp
+	sudo mkdir -p /var/log/ntpsec
+	sudo chown ntpsec:ntpsec /var/log/ntpsec
 	#sudo apt install -y ssh
 	sudo apt install -y locate
 	sudo updatedb
 
 ####################
-remove_packages:
+clean_system:
 	#sudo mkdir -p /usr/share/fonts/psf
 	#sudo cp /usr/share/consolefonts/*psf.gz /usr/share/fonts/psf/
 	sudo apt purge -y x11-common
@@ -118,9 +120,6 @@ remove_packages:
 	#sudo apt purge -y runit-init-antix
 	#sudo apt purge -y sysvinit-utils-antix
 	sudo apt autoremove -y
-
-####################
-clean_system:
 	sudo rm -rf /etc/sv
 	sudo rm -rf /etc/rc*
 	sudo rm -rf /etc/init.d
