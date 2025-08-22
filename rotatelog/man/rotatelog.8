@@ -43,11 +43,11 @@ the log rotation, or commands to delete old files, etc...
 .nf
 # comment
 # stop the service
-/sbin/sv stop srv
+/sbin/task stop srv
 # rotate some log files
 \- /var/log/srv/debug.log
 #restart service
-/sbin/sv start srv
+/sbin/task start srv
 .fi
 
 .SS Example '/etc/rotatelog/nginx' : config file for nginx
