@@ -1,3 +1,3 @@
-#! /bin/sh
+#!/bin/sh
 echo "Activating swap"
 /sbin/swapon -a -v >/dev/null 2>&1

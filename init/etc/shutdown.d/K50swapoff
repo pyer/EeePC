@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "Deactivating swap"
+/sbin/swapoff -a -v
