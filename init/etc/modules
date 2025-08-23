@@ -11,7 +11,7 @@ wmi_bmof
 ath9k
 gma500_gfx
 videodev
-snd_hda_codec_realteki
+snd_hda_codec_realtek
 snd_hda_codec_generic
 snd_hda_intel
 snd_hda_codec
