@@ -30,7 +30,6 @@ make_etc() {
   cp -a /etc/ethertypes .
   cp -a /etc/group* .
   cp -a /etc/gshadow* .
-  cp -a /etc/hosts .
   cp -a /etc/inputrc .
   cp -a /etc/issue .
   cp -a /etc/ld.so.cache .
@@ -97,6 +96,12 @@ make_fstab() {
 make_hostname() {
   echo "Make hostname"
   echo "$DRIVE" >hostname
+  # Update /etc/hosts
+  echo "127.0.0.1 localhost $DRIVE" >hosts
+  # The following lines are desirable for IPv6 capable hosts
+  echo "::1     localhost ip6-localhost ip6-loopback" >>hosts
+  echo "ff02::1 ip6-allnodes"   >>hosts
+  echo "ff02::2 ip6-allrouters" >>hosts
 }
 
 yn() {
@@ -174,6 +179,7 @@ make_dir /root
 make_dir /var
 echo "Create directories in /"
 mkdir dev
+mkdir media
 mkdir mnt
 mkdir proc
 mkdir run
