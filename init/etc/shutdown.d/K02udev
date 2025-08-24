@@ -1,4 +1,0 @@
-#!/bin/sh -e
-# prevents cryptsetup/dmsetup hangs ( see #261 & Debian bug #791944 )
-/usr/bin/rm -f /run/udev/control
-

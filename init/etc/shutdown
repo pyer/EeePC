@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 export PATH=/sbin:/bin
 
 echo "Waiting for tasks to stop"
@@ -21,10 +21,44 @@ do
   done
 done
 echo ""
-
 echo "Shutdown in progress ..."
-# Stop all with killer scripts
-for script in /etc/shutdown.d/K*
+
+# prevents cryptsetup/dmsetup hangs ( see #261 & Debian bug #791944 )
+/usr/bin/rm -f /run/udev/control
+
+echo 'Unmounting network shares...'
+sync
+umount -a -r -t nfs,nfs4,cifs
+
+echo "Set network interfaces down"
+/sbin/ifdown -a --exclude=lo
+
+echo "Deactivating swap"
+/sbin/swapoff -a -v
+
+echo 'Unmounting all volumes...'
+sync
+while read -r DEV MTPT FSTYPE REST
 do
-  "$script"
-done
+    case "$MTPT" in
+    /|/usr|/proc|/dev|/.dev|/dev/pts|/dev/shm|/dev/.static/dev|/proc/*|/sys|/sys/*|/run|/run/lock|/run/shm|/run/rpc_pipefs|/dev/vcs)
+        continue
+        ;;
+    /usr)
+        # Remount /usr read-only if /usr is a mount point.
+        mount -n -o remount,ro /usr /usr
+        ;;
+    esac
+    case "$FSTYPE" in
+    proc|procfs|linprocfs|sysfs|securityfs|usbfs|usbdevfs|devpts)
+        continue
+        ;;
+    tmpfs)
+        umount -r -v $MTPT
+        ;;
+    *)
+        umount -r -v $MTPT
+        ;;
+    esac
+done < /proc/mounts
+

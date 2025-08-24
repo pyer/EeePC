@@ -1,8 +1,0 @@
-#!/bin/sh -e
-
-[ -x /sbin/ifup ] || exit 0
-[ -x /sbin/ifdown ] || exit 0
-
-echo "Set network interfaces down"
-/sbin/ifdown -a --exclude=lo
-
