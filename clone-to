@@ -1,26 +1,102 @@
 #!/bin/bash
 
-
-TEXTDOMAINDIR=/usr/share/locale
-TEXTDOMAIN=cli-installer
-
 #Default
-DISTRO=antiX
+. /etc/os-release
+DISTRO=$PRETTY_NAME
 
 ##functions
 
 help_text() {
-echo $"Usage: $0 <drive>"
-echo $"Where drive is the name of the drive where $DISTRO is to be installed on."
-echo $"   For example: $0 sdb1"
-echo
+  echo $"Usage: $0 <drive>"
+  echo $"Where drive is the name of the drive where $DISTRO is to be installed on."
+  echo $"   For example: $0 sdb1"
+  echo
+}
+
+make_dir() {
+  echo "Copy $1"
+  cp -ra $1 .
+}
+
+make_etc() {
+  echo "Copy /etc files"
+  cp -a /etc/adjtime .
+  cp -a /etc/bash.bashrc .
+  cp -a /etc/ca-certificates.conf .
+  cp -a /etc/crontab .
+  cp -a /etc/debconf.conf .
+  cp -a /etc/debian_version .
+  cp -a /etc/environment .
+  cp -a /etc/ethertypes .
+  cp -a /etc/group* .
+  cp -a /etc/gshadow* .
+  cp -a /etc/hosts .
+  cp -a /etc/inputrc .
+  cp -a /etc/issue .
+  cp -a /etc/ld.so.cache .
+  cp -a /etc/ld.so.conf .
+  cp -a /etc/libaudit.conf .
+  cp -a /etc/login.defs .
+  cp -a /etc/machine-id .
+  cp -a /etc/magic* .
+  cp -a /etc/manpath.config .
+  cp -a /etc/mime.types .
+  cp -a /etc/modules .
+  cp -a /etc/motd .
+  cp -a /etc/mtab .
+  cp -a /etc/networks .
+  cp -a /etc/os-release .
+  cp -a /etc/passwd* .
+  cp -a /etc/profile .
+  cp -a /etc/protocols .
+  cp -a /etc/resolv.conf .
+  cp -a /etc/services .
+  cp -a /etc/shadow* .
+  cp -a /etc/shells .
+  cp -a /etc/sub* .
+  cp -a /etc/sysctl.conf .
+  cp -a /etc/timezone .
+  echo "Copy /etc directories"
+  cp -ra /etc/apt .
+  cp -ra /etc/avahi .
+  cp -ra /etc/bash_completion.d .
+  cp -ra /etc/bluetooth .
+  cp -ra /etc/ca-certificates .
+  cp -ra /etc/dhcp .
+  cp -ra /etc/dictionaries-common .
+  cp -ra /etc/dpkg .
+  cp -ra /etc/groff .
+  cp -ra /etc/ld.so.conf.d .
+  cp -ra /etc/network .
+  cp -ra /etc/ntpsec .
+  cp -ra /etc/pam* .
+  cp -ra /etc/perl .
+  cp -ra /etc/profile.d .
+  cp -ra /etc/security .
+  cp -ra /etc/selinux .
+  cp -ra /etc/shutdown* .
+  cp -ra /etc/skel .
+  cp -ra /etc/ssh .
+  cp -ra /etc/ssl .
+  cp -ra /etc/startup* .
+  cp -ra /etc/sudo* .
+  cp -ra /etc/sysctl.d .
+  cp -ra /etc/tasks .
+  cp -ra /etc/udev .
+  cp -ra /etc/vim .
+  cp -ra /etc/wpa_supplicant .
 }
 
 make_fstab() {
-echo "Make fstab"
-echo "$TARGET / ext4 defaults,relatime 0 1" >/etc/fstab
-SWAPDEV=$(swapon --show --noheadings |cut -d ' ' -f1)
-[ -n $SWAPDEV ] && echo "$SWAPDEV none swap defaults 0 0" >>/etc/fstab
+  echo "Make fstab"
+  echo "$TARGET / ext4 defaults,relatime 0 1" >fstab
+  SWAPDEV=$(swapon --show --noheadings |cut -d ' ' -f1)
+  [ -n $SWAPDEV ] && echo "$SWAPDEV none swap defaults 0 0" >>fstab
+}
+
+make_hostname() {
+  echo "Make hostname"
+  echo "$DRIVE" >hostname
 }
 
 yn() {
@@ -88,26 +164,27 @@ then
   umount /mnt
 fi
 mount $TARGET /mnt
+echo "Clear /mnt"
 rm -rf /mnt/*
 cd /mnt
-cp -ra /boot .
-cp -ra /usr .
-cp -ra /etc .
-cp -ra /home .
-cp -ra /root .
-cp -ra /var .
+make_dir /boot
+make_dir /usr
+make_dir /home
+make_dir /root
+make_dir /var
+echo "Create directories in /"
 mkdir dev
-mkdir media
 mkdir mnt
-mkdir opt
 mkdir proc
 mkdir run
-mkdir srv
 mkdir sys
 mkdir -m 0777 tmp
 ln -s usr/bin  bin
 ln -s usr/lib  lib
 ln -s usr/sbin sbin
-echo
+mkdir etc
+cd etc
+make_etc
 make_fstab
+make_hostname
 echo "Done."
