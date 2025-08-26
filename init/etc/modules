@@ -1,28 +1,4 @@
 # /etc/modules: kernel modules to load at boot time.
-#
-# This file contains the names of kernel modules that should be loaded
-# at boot time, one per line. Lines beginning with "#" are ignored.
-# Parameters can be specified after the module name.
-acpi_cpufreq
-ac
-button
 asus_wmi
-wmi_bmof
 ath9k
 gma500_gfx
-videodev
-snd_hda_codec_realtek
-snd_hda_codec_generic
-snd_hda_intel
-snd_hda_codec
-snd_hda_core
-snd_intel_dspcfg
-snd_intel_sdw_acpi
-snd_hwdep
-snd_pcm
-snd_timer
-snd
-soundcore
-pcspkr
-ledtrig_audio
-evdev
