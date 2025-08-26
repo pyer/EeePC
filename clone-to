@@ -152,7 +152,7 @@ then
 fi
 
 # Show requirements
-kernel="-$(uname -r)"
+kernel="$(uname -sr)"
 echo "Install $kernel on /dev/$DRIVE"
 echo "Beware, all data on $DRIVE wil be destroyed."
 yn $"Are you sure ? (y/N)"
