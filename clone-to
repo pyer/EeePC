@@ -23,7 +23,6 @@ make_etc() {
   cp -a /etc/adjtime .
   cp -a /etc/ca-certificates.conf .
   cp -a /etc/crontab .
-  cp -a /etc/debconf.conf .
   cp -a /etc/debian_version .
   cp -a /etc/environment .
   cp -a /etc/ethertypes .
@@ -52,7 +51,6 @@ make_etc() {
   cp -a /etc/shadow* .
   cp -a /etc/shells .
   cp -a /etc/sub* .
-  cp -a /etc/sysctl.conf .
   cp -a /etc/timezone .
   echo "Copy /etc directories"
   cp -ra /etc/apt .
@@ -71,14 +69,13 @@ make_etc() {
   cp -ra /etc/perl .
   cp -ra /etc/profile.d .
   cp -ra /etc/security .
-  cp -ra /etc/selinux .
   cp -ra /etc/shutdown* .
   cp -ra /etc/skel .
   cp -ra /etc/ssh .
   cp -ra /etc/ssl .
   cp -ra /etc/startup* .
   cp -ra /etc/sudo* .
-  cp -ra /etc/sysctl.d .
+  cp -ra /etc/sysctl* .
   cp -ra /etc/tasks .
   cp -ra /etc/udev .
   cp -ra /etc/vim .
