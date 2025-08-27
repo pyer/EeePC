@@ -1,0 +1,30 @@
+# /etc/profile: system-wide .profile file for the Bourne shell (sh(1))
+# and Bourne compatible shells (bash(1), ksh(1), ash(1), ...).
+
+if [ "$(id -u)" -eq 0 ]; then
+  PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+  PS1='# '
+else
+  PATH="/usr/bin:/bin"
+  PS1='$ '
+fi
+export PATH
+
+if [ "${BASH-}" ] && [ "$BASH" != "/bin/sh" ]; then
+  # set a fancy prompti
+  PS1='\u@\h:\w\$ '
+
+fi
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+if [ -d /etc/profile.d ]; then
+  for i in /etc/profile.d/*.sh; do
+    if [ -r $i ]; then
+      . $i
+    fi
+  done
+  unset i
+fi

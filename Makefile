@@ -76,12 +76,12 @@ init:
 
 ####################
 config:
-	mkdir -p /home/pierre/.ssh
-	chmod 700 /home/pierre/.ssh
-	cp config/authorized_keys /home/pierre/.ssh/
-	chmod 600 /home/pierre/.ssh/authorized_keys
-	cp config/bashrc.pierre /home/pierre/.bashrc
+	sudo cp config/profile /etc/
 	sudo cp config/bashrc.root /root/.bashrc
+	sudo cp config/skel/bash_logout /etc/skel/.bash_logout
+	sudo cp config/skel/bashrc      /etc/skel/.bashrc
+	sudo cp config/skel/profile     /etc/skel/.profile
+	sudo rm -f /etc/bash.bashrc
 	sudo cp config/timezone /etc/timezone
 	sudo rm -f /etc/localtime
 	sudo ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime
@@ -89,6 +89,13 @@ config:
 	sudo cp config/motd  /etc/
 	sudo mkdir -p /usr/share/keymap
 	sudo cp config/UTF-8_del.kmap.gz /usr/share/keymap/
+	mkdir -p $(HOME)/.ssh
+	chmod 700 $(HOME)/.ssh
+	cp config/authorized_keys $(HOME)/.ssh/
+	chmod 600 $(HOME)/.ssh/authorized_keys
+	cp config/skel/bash_logout $(HOME)/.bash_logout
+	cp config/skel/bashrc      $(HOME)/.bashrc
+	cp config/skel/profile     $(HOME)/.profile
 
 ####################
 system:

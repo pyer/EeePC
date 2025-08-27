@@ -21,7 +21,6 @@ make_dir() {
 make_etc() {
   echo "Copy /etc files"
   cp -a /etc/adjtime .
-  cp -a /etc/bash.bashrc .
   cp -a /etc/ca-certificates.conf .
   cp -a /etc/crontab .
   cp -a /etc/debconf.conf .
