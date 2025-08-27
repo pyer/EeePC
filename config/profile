@@ -9,16 +9,7 @@ else
   PS1='$ '
 fi
 export PATH
-
-if [ "${BASH-}" ] && [ "$BASH" != "/bin/sh" ]; then
-  # set a fancy prompti
-  PS1='\u@\h:\w\$ '
-
-fi
-
-# check the window size after each command and, if necessary,
-# update the values of LINES and COLUMNS.
-shopt -s checkwinsize
+export EDITOR=vim
 
 if [ -d /etc/profile.d ]; then
   for i in /etc/profile.d/*.sh; do
