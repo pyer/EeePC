@@ -99,43 +99,11 @@ static void show_issue(void)
   }
 }
 
-static void show_prompt(void)
-{
-  printf("Login: ");
-  fflush(stdout);
-}
-
-static void get_logname(char *logname)
-{
-  char *bp = logname;
-  unsigned char c = 1;
-
-  tcflush(0, TCIFLUSH);    /* flush pending input */
-  while (c != 0 ) {
-    if (read (0, &c, 1) < 1) {
-        if (errno == EINTR || errno == EIO || errno == ENOENT)
-          exit (EXIT_SUCCESS);
-        error("cannot read tty","");
-    }
-    if (c == '\n' || c == '\r') {
-        c = 0;
-    }
-    *bp++ = c;
-
-    if ((size_t)(bp - logname) > 40 ) {
-        *bp = 0;
-        error("login name is too long", "");
-    }
-  }
-}
-
 /*
  * MAIN ENTRY
  */
 int main (int argc, char **argv)
 {
-  char logname[42];
-
   /* argv[1] is the tty name */
   if (argc == 3) {
     open_tty(argv[1]);
@@ -144,14 +112,9 @@ int main (int argc, char **argv)
   } else if (argc == 2) {
     open_tty(argv[1]);
     show_issue();
-    *logname = 0;
-    while (*logname == 0) {
-      show_prompt();
-      get_logname(logname);
-    }
-    execl(loginprog, loginprog, "--", logname, NULL);
+    execl(loginprog, loginprog, NULL);
   } else {
-    log_error(LOG_PREFIX, "Usage: logon <tty name>", "");
+    log_error(LOG_PREFIX, "Usage: logon <tty name> [<user name>]", "");
     return 111;
   }
   error("cannot execute ", loginprog);
