@@ -3,7 +3,7 @@
 # Disable service if /dev/tty{N} does not exist.
 if ! test -c /dev/tty4
 then
-	/sbin/sv disable tty4
+	/sbin/task disable tty4
 	exit 0
 fi
 
