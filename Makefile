@@ -90,6 +90,7 @@ config:
 	sudo ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime
 	sudo cp config/issue /etc/
 	sudo cp config/motd  /etc/
+	sudo rm -rf /etc/update-motd/*
 	sudo mkdir -p /usr/share/keymap
 	sudo cp config/UTF-8_del.kmap.gz /usr/share/keymap/
 	mkdir -p $(HOME)/.ssh
@@ -105,8 +106,10 @@ system:
 	sudo apt install -y ntp
 	sudo mkdir -p /var/log/ntpsec
 	sudo chown ntpsec:ntpsec /var/log/ntpsec
-	#sudo apt install -y ssh
+	sudo apt install -y openssh-client
+	sudo apt install -y openssh-server
 	sudo apt install -y locate
+	sudo apt install -y rsyslog
 	sudo updatedb
 
 ####################
