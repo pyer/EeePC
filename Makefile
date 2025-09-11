@@ -68,6 +68,7 @@ init:
 	#sudo task enable dhcpd
 	#sudo task enable ntpd
 	#sudo task enable sshd
+	sudo task enable rsyslogd
 	sudo task enable tty1
 	sudo task enable tty2
 	sudo task enable tty3
@@ -97,6 +98,7 @@ config:
 	chmod 700 $(HOME)/.ssh
 	cp config/authorized_keys $(HOME)/.ssh/
 	chmod 600 $(HOME)/.ssh/authorized_keys
+	sudo cp config/rsyslog.conf /etc/
 
 ####################
 system:

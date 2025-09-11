@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+# kill the old daemon first
+[ -f /run/rsyslogd.pid ] && kill $(/bin/cat /run/rsyslogd.pid)
+# and launch the new one
+exec /sbin/rsyslogd -n
