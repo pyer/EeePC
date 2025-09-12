@@ -1,20 +1,20 @@
 #!/bin/sh -e
 export PATH=/sbin:/bin
 
-echo "Waiting for tasks to stop"
-for task in /etc/tasks/enabled/*
+echo "Waiting for services to stop"
+for service in /etc/sv/enabled/*
 do
-  echo -n "d" >$task/control
+  echo -n "d" >$service/control
 done
 
 WAIT=0
 while [ $WAIT -eq 0 ]
 do
   WAIT=1
-  for task in /etc/tasks/enabled/*
+  for service in /etc/sv/enabled/*
   do
     echo -n "."
-    if [ "$(cat $task/status)" != "down" ]
+    if [ "$(cat $service/status)" != "down" ]
     then
       WAIT=0
     fi

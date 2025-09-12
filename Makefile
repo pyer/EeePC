@@ -33,7 +33,7 @@ cron:
 	sudo rm -rf /etc/cron.*
 	sudo rm -rf /var/cron
 	sudo cp cron/etc/crontab /etc/crontab
-	sudo task enable cron
+	sudo sv enable cron
 	@echo "Install rotatelog"
 	sudo install -m 755 rotatelog/rotatelog /sbin/
 	sudo cp rotatelog/man/rotatelog.8 /usr/share/man/man8/
@@ -47,14 +47,12 @@ init:
 	@echo "Build init"
 	make -C init/src all
 	@echo "Install init"
-	sudo rm -f /bin/task /bin/runtask
-	sudo rm -f /sbin/run*
-	sudo rm -f /sbin/init
+	sudo rm -f /sbin/init*
 	sudo install -m 755 init/src/init     /sbin
+	sudo install -m 755 init/src/init_sv  /sbin
 	sudo install -m 755 init/src/logon    /sbin
-	sudo install -m 755 init/src/runtask  /sbin
 	sudo install -m 755 init/src/utmpset  /sbin
-	sudo install -m 755 init/task           /sbin
+	sudo install -m 755 init/sv           /sbin
 	sudo rm -f /sbin/halt /sbin/poweroff  /sbin/reboot
 	sudo ln -s /sbin/init /sbin/halt
 	sudo ln -s /sbin/init /sbin/poweroff
@@ -63,16 +61,16 @@ init:
 	sudo rm -rf /etc/startup.d
 	sudo rm -rf /etc/shutdown.d
 	sudo cp -r init/etc/* /etc/
-	@echo "Install tasks"
-	sudo mkdir -p /etc/tasks/enabled
-	#sudo task enable dhcpd
-	#sudo task enable ntpd
-	#sudo task enable sshd
-	sudo task enable rsyslogd
-	sudo task enable tty1
-	sudo task enable tty2
-	sudo task enable tty3
-	sudo task enable tty4
+	@echo "Install services"
+	sudo mkdir -p /etc/sv/enabled
+	sudo sv enable dhcpd
+	sudo sv enable ntpd
+	sudo sv enable rsyslogd
+	sudo sv enable sshd
+	sudo sv enable tty1
+	sudo sv enable tty2
+	sudo sv enable tty3
+	sudo sv enable tty4
 	sudo sync
 
 ####################
@@ -132,7 +130,6 @@ clean_system:
 	#sudo apt purge -y runit-init-antix
 	#sudo apt purge -y sysvinit-utils-antix
 	sudo apt autoremove -y
-	sudo rm -rf /etc/sv
 	sudo rm -rf /etc/rc*
 	sudo rm -rf /etc/init.d
 	sudo rm -rf /etc/runit*

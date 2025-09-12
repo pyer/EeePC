@@ -75,10 +75,10 @@ make_etc() {
   cp -ra /etc/ssl .
   cp -ra /etc/startup* .
   cp -ra /etc/sudo* .
-  cp -ra /etc/update-motd .
+  cp -ra /etc/sv .
   cp -ra /etc/sysctl* .
-  cp -ra /etc/tasks .
   cp -ra /etc/udev .
+  cp -ra /etc/update-motd .
   cp -ra /etc/vim .
   cp -ra /etc/wpa_supplicant .
 }

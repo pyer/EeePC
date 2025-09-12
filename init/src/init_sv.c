@@ -248,7 +248,7 @@ int main(int argc, char *argv[], char * const *envp) {
   progname = argv[0];
   environ  = envp;
   if (! argv[1] || argv[2]) {
-    fatal("Usage: runtask <task>", 0);
+    fatal("Usage: $0 <service>", 0);
     _exit(1);
   }
   dir = argv[1];

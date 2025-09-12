@@ -1,7 +1,7 @@
 # Prerequisites
 init/src/init
+init/src/init_sv
 init/src/logon
-init/src/runtask
 init/src/utmpset
 
 cron/src/cron

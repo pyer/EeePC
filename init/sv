@@ -1,0 +1,78 @@
+#!/bin/sh
+#
+action=$1
+service=$2
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+check_service() {
+  if [ -z ${service} ]
+  then
+    echo "ERROR: service undefined"
+    exit 1
+  fi
+}
+
+check_enabled_service() {
+  check_service
+  if [ ! -d "/etc/sv/enabled/${service}" ]
+  then
+    echo "ERROR: service ${service} is disabled"
+    exit 1
+  fi
+  if [ ! -d "/etc/sv/available/${service}" ]
+  then
+    echo "ERROR: service ${service} not found"
+    exit 1
+  fi
+}
+
+case "${action}" in
+  start)
+    check_enabled_service
+    /usr/bin/printf "u" >/etc/sv/enabled/${service}/control
+    /usr/bin/cat /etc/sv/enabled/${service}/status
+    ;;
+  stop)
+    check_enabled_service
+    /usr/bin/printf "d" >/etc/sv/enabled/${service}/control
+    /usr/bin/cat /etc/sv/enabled/${service}/status
+    ;;
+  status|st)
+    check_service
+    if [ -f "/etc/sv/enabled/${service}/status" ]
+    then
+      /usr/bin/cat /etc/sv/enabled/${service}/status
+    else
+      if [ -d "/etc/sv/available/${service}" ]
+      then
+        echo "disabled"
+      else
+        echo "not found"
+      fi
+    fi
+    ;;
+  enable)
+    if [ ! -d "/etc/sv/enabled/${service}" ]
+    then
+      if [ ! -d "/etc/sv/available/${service}" ]
+      then
+        echo "ERROR: service ${service} not found"
+        exit 1
+      fi
+      /usr/bin/ln -s /etc/sv/available/${service} /etc/sv/enabled/${service}
+    fi
+    ;;
+  disable)
+    check_enabled_service
+    /usr/bin/printf "d" >/etc/sv/enabled/${service}/control
+    /usr/bin/rm -rf /etc/sv/enabled/${service}
+    ;;
+  list)
+    ls -1 /etc/sv/enabled | sort
+    ;;
+  *)
+    echo "Usage: $0 <status | start | stop | enable | disable> service"
+    echo "   or: $0 list"
+    ;;
+esac

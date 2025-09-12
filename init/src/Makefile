@@ -6,7 +6,7 @@ OPTIONS=-O2 -Wall -c
 ####################
 
 default: all
-all: init runtask utmpset logon
+all: init init_sv utmpset logon
 
 ####################
 
@@ -14,7 +14,7 @@ init: init.o log.a sig.a str.a wait.a
 	gcc -s -o $@ $^
 	#gcc -s -o $@ $^ -static
 
-runtask: runtask.o log.a sig.a str.a wait.a
+init_sv: init_sv.o log.a sig.a str.a wait.a
 	gcc -s -o $@ $^
 
 utmpset: utmpset.o log.a str.a
@@ -31,7 +31,7 @@ logon: logon.o log.a
 init.o: init.c
 	gcc $(OPTIONS) -o $@ $<
 
-runtask.o: runtask.c
+init_sv.o: init_sv.c
 	gcc $(OPTIONS) -o $@ $<
 
 utmpset.o: utmpset.c
@@ -99,4 +99,4 @@ clean:
 	rm -f *~
 
 cleaner: clean
-	rm -f init runtask utmpset logon
+	rm -f init init_sv utmpset logon

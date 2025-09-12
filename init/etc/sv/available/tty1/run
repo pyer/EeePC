@@ -1,11 +1,11 @@
 #!/bin/sh -euC
 
 # Disable service if /dev/tty{N} does not exist.
-if ! test -c /dev/tty2
+if ! test -c /dev/tty1
 then
-	/sbin/task disable tty2
+	/sbin/sv disable tty1
 	exit 0
 fi
 
 # Log on /dev/tty{N}
-exec setsid /sbin/logon /dev/tty2
+exec setsid /sbin/logon /dev/tty1
