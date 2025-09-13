@@ -96,7 +96,6 @@ config:
 	chmod 700 $(HOME)/.ssh
 	cp config/authorized_keys $(HOME)/.ssh/
 	chmod 600 $(HOME)/.ssh/authorized_keys
-	sudo cp config/rsyslog.conf /etc/
 
 ####################
 system:
