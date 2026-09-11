@@ -53,6 +53,7 @@ init:
 	sudo install -m 755 init/src/logon    /sbin
 	sudo install -m 755 init/src/utmpset  /sbin
 	sudo install -m 755 init/sv           /sbin
+	sudo rm -f /sbin/shutdown
 	sudo rm -f /sbin/halt /sbin/poweroff  /sbin/reboot
 	sudo ln -s /sbin/init /sbin/halt
 	sudo ln -s /sbin/init /sbin/poweroff
@@ -115,6 +116,7 @@ system:
 clean_system:
 	#sudo mkdir -p /usr/share/fonts/psf
 	#sudo cp /usr/share/consolefonts/*psf.gz /usr/share/fonts/psf/
+	sudo apt purge -y avahi-autoipd
 	sudo apt purge -y x11-common
 	sudo apt purge -y libx11-6
 	sudo apt purge -y libx11-data
