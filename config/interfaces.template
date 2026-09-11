@@ -10,7 +10,8 @@ iface lo inet loopback
 # The primary network interface
 allow-hotplug eth0
 iface eth0 inet static
-    address 192.168.2.1/24
+    address 192.168.1.121/24
+    gateway 192.168.1.1
 
 # The wifi network interface
 allow-hotplug wlan0
