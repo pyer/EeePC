@@ -1,2 +1,0 @@
-# updatedb every hour
-0 * * * * root /sbin/updatedb

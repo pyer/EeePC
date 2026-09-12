@@ -25,9 +25,9 @@
  * vix 30dec86 [written]
  */
 
-#define CRON_VERSION "5.0"
+#define CRON_VERSION "5.1"
 #define CRON_PID     "/run/cron.pid"
-#define CRON_TAB     "/etc/crontab"
+#define CRON_TAB     "/etc/cron.conf"
 
 
 /* reorder these #include's at your peril */
@@ -40,7 +40,6 @@
 #include <sys/file.h>
 #include <sys/stat.h>
 
-#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -58,6 +57,7 @@
 #include <utime.h>
 
 /* application headers */
+#include "bitstring.h"
 
 #include "macros.h"
 #include "structs.h"

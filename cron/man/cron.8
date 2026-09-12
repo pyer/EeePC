@@ -1,25 +1,7 @@
-.\" Copyright 1988,1990,1993,1996,2021 by Paul Vixie ("VIXIE")
-.\" Copyright (c) 2004 by Internet Systems Consortium, Inc. ("ISC")
-.\" Copyright (c) 1997,2000 by Internet Software Consortium, Inc.
-.\"
-.\" Permission to use, copy, modify, and distribute this software for any
-.\" purpose with or without fee is hereby granted, provided that the above
-.\" copyright notice and this permission notice appear in all copies.
-.\"
-.\" THE SOFTWARE IS PROVIDED "AS IS" AND VIXIE DISCLAIMS ALL WARRANTIES
-.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-.\" MERCHANTABILITY AND FITNESS.  IN NO EVENT SHALL VIXIE BE LIABLE FOR
-.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
-.\" OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-.\"
-.\" $Id: cron.8,v 1.8 2004/01/23 19:03:32 vixie Exp $
-.\" 
-.TH CRON 8 "8 July 2025"
+.TH CRON 8 "12 September 2026"
 .UC 4
 .SH NAME
-cron \- daemon to execute scheduled commands
+cron \- service to execute scheduled commands
 .SH SYNOPSIS
 .B cron
 .SH DESCRIPTION
@@ -29,16 +11,14 @@ It is running in the foreground.
 This can be useful when starting it out of init.
 .PP
 .I Cron
-searches for /etc/crontab (see
-.IR crontab (5)).
-.I Cron
+searches for /etc/cron.conf
 then wakes up every minute, examining all stored crontabs, checking each
 command to see if it should be run in the current minute.
 .PP
 Additionally,
 .I cron
 checks each minute to see if the modtime on
-.IR /etc/crontab )
+.IR /etc/cron.conf
 has changed, and if it has,
 .I cron
 will reload this crontab file.  Thus
@@ -62,8 +42,6 @@ the clock or timezone, and the new time is used immediately.
 On receipt of a \s-2SIGHUP\s+2, the cron daemon will close and reopen its
 log file.  This is useful in scripts which rotate and age log files.  
 .fi
-.SH SEE ALSO
-.IR crontab (5)
 .SH AUTHOR
 Pierre Bazonnard
 .nf

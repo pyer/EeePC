@@ -19,21 +19,20 @@ cron:
 	make -C cron/src
 	@echo "Uninstall rotatelog and cron"
 	sudo dpkg --purge logrotate
-	sudo dpkg --purge anacron
+#	sudo dpkg --purge anacron
 	sudo dpkg --purge cron
 	sudo dpkg --purge cron-daemon-common
 	@echo "Install cron"
 	sudo install -m 755 -s cron/src/cron /sbin/
-	sudo cp cron/man/bitstring.3 /usr/share/man/man3/
-	sudo gzip -f /usr/share/man/man3/bitstring.3 
 	sudo cp cron/man/cron.8      /usr/share/man/man8/
 	sudo gzip -f /usr/share/man/man8/cron.8
-	sudo cp cron/man/crontab.5   /usr/share/man/man5/
-	sudo gzip -f /usr/share/man/man5/crontab.5
+	sudo rm -f /usr/share/man/man5/crontab.5
 	sudo rm -rf /etc/cron.*
 	sudo rm -rf /var/cron
-	sudo cp cron/etc/crontab /etc/crontab
+	sudo cp cron/etc/cron.conf /etc/
 	sudo sv enable cron
+
+logrotate:
 	@echo "Install rotatelog"
 	sudo install -m 755 rotatelog/rotatelog /sbin/
 	sudo cp rotatelog/man/rotatelog.8 /usr/share/man/man8/
@@ -48,6 +47,7 @@ init:
 	make -C init/src all
 	@echo "Install init"
 	sudo rm -f /sbin/init*
+	sudo rm -f /etc/init*
 	sudo install -m 755 init/src/init     /sbin
 	sudo install -m 755 init/src/init_sv  /sbin
 	sudo install -m 755 init/src/logon    /sbin
@@ -108,6 +108,7 @@ system:
 	sudo chown ntpsec:ntpsec /var/log/ntpsec
 	sudo apt install -y openssh-client
 	sudo apt install -y openssh-server
+	sudo mkdir -p /var/cache/locate
 	sudo apt install -y locate
 	sudo apt install -y rsyslog
 	sudo updatedb
@@ -122,8 +123,8 @@ clean_system:
 	sudo apt purge -y libx11-data
 	sudo apt purge -y libx11-6
 	sudo apt purge -y xkb-data
-	sudo apt purge -y systemd
-	sudo apt purge -y libsystemd-shared
+	#sudo apt purge -y systemd
+	#sudo apt purge -y libsystemd-shared
 	sudo apt purge -y tasksel
 	sudo apt purge -y initscripts
 	sudo apt purge -y emacsen-common
@@ -143,5 +144,6 @@ clean_system:
 	sudo rm -rf /var/log/samba
 	sudo rm -rf /etc/ufw
 	sudo rm -rf /etc/X11
+	sudo find /usr/share/man -type f -name "systemd*" -delete
 
 ####################
